@@ -1,0 +1,4 @@
+5125eb34fe97e2aace5cf0c7c1f18ed8  backups/20260104_210826/app/postgres_data.tar.gz
+5fd4b63b87bc0b3d9fe42f8f8f2b960f  backups/20260104_210826/app/config.tar.gz
+c1db7f784a7073ed4d00030c9f795c5a  backups/20260104_210826/db/schema.sql
+7def2dd845dad6f2168ebaa8806ebdf4  backups/20260104_210826/db/full_dump.sql.gz

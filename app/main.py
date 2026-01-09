@@ -75,3 +75,10 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_level="info"
     )
+
+@app.post("/webhook")
+async def webhook(request: dict, x_token: str = Header(...)):
+    if x_token != os.getenv("KWORK_WEBHOOK_SECRET"):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    # Обработка заказа
+    return {"status": "accepted", "orderid": str(uuid.uuid4())}

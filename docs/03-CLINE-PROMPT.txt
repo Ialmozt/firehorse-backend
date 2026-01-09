@@ -1,0 +1,54 @@
+🚀 TASK: Deploy Firehorse MVP to Supabase PostgreSQL
+
+CREDENTIALS:
+
+HOST: db.yommcknuизxkwpmpvlmp.supabase.co
+
+PORT: 5432
+
+USER: postgres
+
+PASSWORD: bkOFQ9jiln6JE82v
+
+PROXY: 127.0.0.1:7891 (SOCKS5)
+
+WORKDIR: /srv/firehorse-backend
+
+STEP 1: Create .env from template
+COMMAND: cp .env.example .env
+
+STEP 2: Deploy schema to PostgreSQL
+COMMAND: PGPASSWORD="bkOFQ9jiln6JE82v" proxychains psql -h db.yommcknуизxkwpmpvlmp.supabase.co -U postgres -d postgres -f schema.sql
+EXPECTED: CREATE EXTENSION, CREATE TABLE, CREATE INDEX, CREATE POLICY successful
+
+STEP 3: Build and start Docker
+COMMANDS:
+
+cd /srv/firehorse-backend
+
+set -a && source .env && set +a
+
+docker-compose up -d
+
+sleep 5
+
+docker-compose logs api
+
+STEP 4: Test health endpoint
+COMMAND: curl http://localhost:8000/health
+EXPECTED: {"status": "healthy", "database": "connected", "version": "PostgreSQL 17.6...", "timestamp": "..."}
+
+STEP 5: Test webhook
+COMMAND: curl -X POST http://localhost:8000/webhook -H "Content-Type: application/json" -d '{"source_id": "kwork_test_123", "topic": "test_article"}'
+EXPECTED: {"order_id": "...", "status": "queued", "created_at": "..."}
+
+VERIFICATION:
+✅ All project files exist
+✅ Schema deployed to PostgreSQL
+✅ Docker containers running
+✅ Health endpoint returns DB version
+✅ Webhook creates orders
+✅ .env protected (chmod 600)
+✅ .env in .gitignore
+
+SUCCESS: Firehorse MVP is production-ready!
