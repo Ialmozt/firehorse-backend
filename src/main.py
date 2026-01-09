@@ -13,9 +13,12 @@ import json
 import time
 from src.core.resilience import retry_with_backoff, supabase_retry_config
 from src.core.logging import setup_logging, get_logger, get_request_id
+from src.middleware import TracingMiddleware
 from src.middleware.logging_middleware import LoggingMiddleware
 from src.middleware.security import SecurityMiddleware, RateLimiter
 from src.models import Order, OrderResponse, ErrorResponse
+from src import metrics as metrics_module
+from fastapi import Response
 
 # Configure JSON logging
 setup_logging(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -28,6 +31,9 @@ app = FastAPI(
     description="Automated Kwork content processing system with Supabase + DeepSeek"
 )
 
+# Add tracing middleware (must be first)
+app.add_middleware(TracingMiddleware)
+
 # Add logging middleware FIRST (before other middleware)
 app.add_middleware(LoggingMiddleware)
 
@@ -36,6 +42,30 @@ rate_limiter = RateLimiter(requests_per_second=10)
 
 # Add security middleware AFTER logging middleware
 app.add_middleware(SecurityMiddleware, rate_limiter=rate_limiter)
+
+# ─────────────────────────────────────────────────────────────────────────
+# METRICS ENDPOINT (Prometheus scraping)
+# ─────────────────────────────────────────────────────────────────────────
+
+@app.get("/metrics")
+async def get_metrics():
+    """
+    Prometheus metrics endpoint.
+    
+    Used by Prometheus to scrape metrics every 15 seconds.
+    Returns metrics in OpenMetrics format.
+    
+    Response: text/plain with Prometheus metrics
+    """
+    try:
+        return Response(
+            content=metrics_module.get_metrics_text(),
+            media_type=metrics_module.get_metrics_content_type(),
+            status_code=200,
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate metrics: {e}")
+        return {"error": "Failed to generate metrics"}, 500
 
 # Supabase Configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -215,6 +245,13 @@ async def health_check():
             }
         )
         
+        # Increment request metrics
+        metrics_module.http_requests_total.labels(
+            method="GET",
+            endpoint="/health",
+            status_code="200"
+        ).inc()
+        
         return {
             "status": "healthy",  # Always return healthy for now
             "database": db_status,
@@ -222,6 +259,12 @@ async def health_check():
             "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
+        metrics_module.http_request_errors_total.labels(
+            method="GET",
+            endpoint="/health",
+            error_type=type(e).__name__
+        ).inc()
+        
         logger.error(
             "health_check_failed",
             extra={
@@ -257,6 +300,7 @@ async def webhook(order: Order):  # Pydantic validates automatically
     - order.price: float 0.01-1000000
     """
     request_id = get_request_id()
+    start_time = time.time()
     
     try:
         logger.info(
@@ -269,6 +313,9 @@ async def webhook(order: Order):  # Pydantic validates automatically
                 "validated": True,  # Pydantic validated
             }
         )
+        
+        # Increment order created metric
+        metrics_module.orders_created_total.inc()
         
         # Prepare data for insertion
         data = {
@@ -304,6 +351,11 @@ async def webhook(order: Order):  # Pydantic validates automatically
             }
         )
         
+        # At success, log metrics
+        metrics_module.orders_completed_total.inc()
+        duration = time.time() - start_time
+        logger.info(f"Order {order.id} processed in {duration:.2f}s")
+        
         return OrderResponse(
             status="success",
             order_id=order.id,
@@ -315,6 +367,12 @@ async def webhook(order: Order):  # Pydantic validates automatically
         # Re-raise HTTP exceptions (they already have proper status codes)
         raise
     except Exception as e:
+        metrics_module.orders_failed_total.labels(reason=type(e).__name__).inc()
+        metrics_module.external_api_errors_total.labels(
+            api_name="deepseek",
+            error_type=type(e).__name__
+        ).inc()
+        
         logger.error(
             "webhook_processing_failed",
             extra={

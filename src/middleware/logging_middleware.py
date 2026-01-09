@@ -17,8 +17,12 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     """
     
     async def dispatch(self, request: Request, call_next) -> Response:
-        # Generate and set request_id
-        request_id = generate_request_id()
+        # Use existing request_id from TracingMiddleware if available
+        if hasattr(request.state, 'request_id'):
+            request_id = request.state.request_id
+        else:
+            request_id = generate_request_id()
+        
         set_request_id(request_id)
         
         # Log request received
