@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'  # DEPRECATED - remove for compatibility
 
 services:
   api:
@@ -26,30 +26,25 @@ services:
     networks:
       - firehorse-net
 
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: firehorse-worker
-    environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - DATABASE_HOST=${DATABASE_HOST}
-      - DATABASE_PORT=${DATABASE_PORT}
-      - DATABASE_NAME=${DATABASE_NAME}
-      - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    volumes:
-      - ./:/app
-    restart: unless-stopped
-    command: python -m src.worker
-    networks:
-      - firehorse-net
-    depends_on:
-      - api
+  # DISABLED: Worker needs Supabase service key fix
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     target: worker
+  #   image: firehorse-backend-worker:latest
+  #   container_name: firehorse-worker
+  #   depends_on:
+  #     - api
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - LOG_LEVEL=${LOG_LEVEL:-INFO}
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - firehorse-net
+  #   restart: on-failure
+  #   command: python -m src.worker
 
   prometheus:
     image: prom/prometheus:latest

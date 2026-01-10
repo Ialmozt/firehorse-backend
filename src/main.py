@@ -202,6 +202,41 @@ class HealthResponse(BaseModel):
     version: str
     timestamp: str
 
+# ─────────────────────────────────────────────────────────────────────────
+# WEBHOOK ENDPOINT (Kwork)
+# ─────────────────────────────────────────────────────────────────────────
+
+@app.post("/webhook/kwork")
+async def kwork_webhook(request: Request):
+    """
+    Kwork webhook endpoint - receives orders from Kwork
+    Returns: order_id, firehorse_id, status, timestamp
+    """
+    try:
+        body = await request.json()
+        order_id = body.get("id", f"order_{int(time.time())}")
+        firehorse_id = f"fh_{order_id}"
+        
+        logger.info(f"📨 Kwork webhook received: {order_id}")
+        logger.info(f"   Title: {body.get('title', 'N/A')}")
+        logger.info(f"   Budget: {body.get('budget', 'N/A')}")
+        
+        return {
+            "order_id": order_id,
+            "firehorse_id": firehorse_id,
+            "status": "queued",
+            "message": "Order received and queued for processing",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in webhook")
+        return {"error": "Invalid JSON"}, 400
+    except Exception as e:
+        logger.error(f"❌ Webhook error: {e}")
+        return {"error": str(e)}, 500
+
+
 # Endpoints
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
