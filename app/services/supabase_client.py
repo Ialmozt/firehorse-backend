@@ -177,3 +177,39 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"❌ Error creating order event: {str(e)}")
             raise
+
+    def update_order_with_content(self, order_uuid: str, content: str, usage_metrics: Optional[Dict] = None) -> Dict[str, Any]:
+        """
+        Update order with generated content and metrics.
+        
+        Args:
+            order_uuid: Order UUID
+            content: Generated content from DeepSeek
+            usage_metrics: API usage metrics
+            
+        Returns:
+            Updated order data
+        """
+        try:
+            update_data = {
+                "final_text": content,
+                "status": "completed",
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            
+            # Add usage metrics to existing metrics
+            if usage_metrics:
+                # Get current metrics
+                current_order = self.db.table("orders").select("metrics").eq("id", order_uuid).execute()
+                if current_order.data:
+                    current_metrics = current_order.data[0].get("metrics", {})
+                    # Merge usage metrics
+                    current_metrics["deepseek_usage"] = usage_metrics
+                    update_data["metrics"] = current_metrics
+            
+            response = self.db.table("orders").update(update_data).eq("id", order_uuid).execute()
+            logger.info(f"✅ Order {order_uuid} updated with content ({len(content)} chars)")
+            return response.data[0] if response.data else update_data
+        except Exception as e:
+            logger.error(f"❌ Error updating order with content: {str(e)}")
+            raise
