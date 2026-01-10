@@ -51,7 +51,13 @@ async def root():
     return {
         "status": "ok",
         "service": "FIREHORSE API",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "endpoints": {
+            "health": "/api/health",
+            "kwork_webhook": "/api/webhook/kwork",
+            "webhook_test": "/api/webhook/kwork/test (dev only)",
+            "info": "/api/info"
+        }
     }
 
 @app.get("/api/info")
@@ -62,7 +68,19 @@ async def info():
         "environment": "production" if not settings.DEBUG else "development",
         "endpoints": {
             "health": "/api/health",
-            "webhook": "/api/webhook",
+            "kwork_webhook": {
+                "path": "/api/webhook/kwork",
+                "method": "POST",
+                "description": "Accept Kwork webhook, save to Supabase, create PGMQ job"
+            },
+            "webhook_test": "/api/webhook/kwork/test (development only)",
+            "webhook_simulate": "/api/webhook/kwork/simulate (development only)"
+        },
+        "features": {
+            "kwork_integration": True,
+            "supabase_storage": True,
+            "pgmq_job_queue": True,
+            "deepseek_ai": True
         }
     }
 
@@ -75,10 +93,3 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_level="info"
     )
-
-@app.post("/webhook")
-async def webhook(request: dict, x_token: str = Header(...)):
-    if x_token != os.getenv("KWORK_WEBHOOK_SECRET"):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    # Обработка заказа
-    return {"status": "accepted", "orderid": str(uuid.uuid4())}
