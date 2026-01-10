@@ -13,9 +13,7 @@ import json
 import time
 from src.core.resilience import retry_with_backoff, supabase_retry_config
 from src.core.logging import setup_logging, get_logger, get_request_id
-from src.middleware import TracingMiddleware
-from src.middleware.logging_middleware import LoggingMiddleware
-from src.middleware.security import SecurityMiddleware, RateLimiter
+from src.middleware import TracingMiddleware, LoggingMiddleware, SecurityMiddleware, RateLimiter, setup_cors
 from src.models import Order, OrderResponse, ErrorResponse
 from src import metrics as metrics_module
 from fastapi import Response
@@ -31,16 +29,19 @@ app = FastAPI(
     description="Automated Kwork content processing system with Supabase + DeepSeek"
 )
 
-# Add tracing middleware (must be first)
+# Add CORS middleware (должен быть первым для обработки preflight запросов)
+app = setup_cors(app)
+
+# Add tracing middleware
 app.add_middleware(TracingMiddleware)
 
-# Add logging middleware FIRST (before other middleware)
+# Add logging middleware
 app.add_middleware(LoggingMiddleware)
 
-# Initialize rate limiter (10 requests per second per IP)
-rate_limiter = RateLimiter(requests_per_second=10)
+# Initialize rate limiter (10 requests per minute per IP как указано в задаче)
+rate_limiter = RateLimiter(requests_per_minute=10)
 
-# Add security middleware AFTER logging middleware
+# Add security middleware (включает rate limiting и API key validation)
 app.add_middleware(SecurityMiddleware, rate_limiter=rate_limiter)
 
 # ─────────────────────────────────────────────────────────────────────────
