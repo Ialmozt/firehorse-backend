@@ -1,0 +1,38 @@
+================================================================================
+FIREHORSE PERFORMANCE OPTIMIZATION REPORT
+Generated: 2026-01-10T07:27:34.836278
+================================================================================
+
+📊 METRICS SUMMARY
+----------------------------------------
+CPU Usage: 3.0%
+Memory Usage: 93.4%
+Disk Usage: 46.6%
+Load Average: (1.5615234375, 1.82958984375, 5.8232421875)
+
+🔍 RECOMMENDATIONS
+----------------------------------------
+[HIGH] Memory: High memory usage: 93.4%
+    Recommendation: Consider increasing memory or optimizing memory usage
+    Action: Increase Docker memory limits or add swap space
+
+📋 OPTIMIZATION PLAN
+----------------------------------------
+Immediate Actions: 1
+Short-term Actions: 0
+Long-term Improvements: 0
+Configuration Changes: 1
+
+🚀 OPTIMIZATION RESULTS
+----------------------------------------
+Applied 0/1 optimizations. Skipped 1. Failed 0.
+
+⚙️ SUGGESTED CONFIGURATION UPDATES
+----------------------------------------
+WORKER_CONCURRENCY=6
+WORKER_POLL_INTERVAL=10
+DATABASE_POOL_SIZE=5
+
+================================================================================
+END OF REPORT
+================================================================================

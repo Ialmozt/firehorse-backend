@@ -29,7 +29,13 @@ app = FastAPI(
     description="Automated Kwork content processing system with Supabase + DeepSeek"
 )
 
-# Add CORS middleware (должен быть первым для обработки preflight запросов)
+# Initialize rate limiter (10 requests per minute per IP как указано в задаче)
+rate_limiter = RateLimiter(requests_per_minute=10)
+
+# Add security middleware (должен быть первым после CORS для rate limiting и security headers)
+app.add_middleware(SecurityMiddleware, rate_limiter=rate_limiter)
+
+# Add CORS middleware (должен быть после security для правильного порядка headers)
 app = setup_cors(app)
 
 # Add tracing middleware
@@ -37,12 +43,6 @@ app.add_middleware(TracingMiddleware)
 
 # Add logging middleware
 app.add_middleware(LoggingMiddleware)
-
-# Initialize rate limiter (10 requests per minute per IP как указано в задаче)
-rate_limiter = RateLimiter(requests_per_minute=10)
-
-# Add security middleware (включает rate limiting и API key validation)
-app.add_middleware(SecurityMiddleware, rate_limiter=rate_limiter)
 
 # ─────────────────────────────────────────────────────────────────────────
 # METRICS ENDPOINT (Prometheus scraping)

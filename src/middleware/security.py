@@ -16,18 +16,19 @@ REQUIRE_API_KEY = os.getenv("REQUIRE_API_KEY", "false").lower() == "true"
 
 class RateLimiter:
     """
-    Simple in-memory rate limiter using fixed window algorithm
+    Advanced rate limiter using sliding window algorithm
     Limit: 10 requests per minute per IP (как указано в задаче)
     """
     
     def __init__(self, requests_per_minute: int = 10):
         self.requests_per_minute = requests_per_minute
         self.requests: Dict[str, List[float]] = defaultdict(list)
+        self.lock = defaultdict(lambda: False)
     
     def is_allowed(self, client_ip: str) -> bool:
-        """Check if request is allowed for this IP"""
+        """Check if request is allowed for this IP using sliding window"""
         current_time = time.time()
-        window_start = current_time - 60.0  # 1 minute window
+        window_start = current_time - 60.0  # 1 minute sliding window
         
         # Get requests for this IP in current window
         if client_ip not in self.requests:
@@ -45,7 +46,29 @@ class RateLimiter:
         
         # Add current request
         self.requests[client_ip].append(current_time)
+        
+        # Clean up old IPs to prevent memory leak
+        if len(self.requests) > 1000:  # Keep only 1000 IPs in memory
+            oldest_ip = min(self.requests.keys(), key=lambda ip: self.requests[ip][-1] if self.requests[ip] else 0)
+            del self.requests[oldest_ip]
+        
         return True
+    
+    def get_remaining_requests(self, client_ip: str) -> int:
+        """Get remaining requests for this IP in current window"""
+        current_time = time.time()
+        window_start = current_time - 60.0
+        
+        if client_ip not in self.requests:
+            return self.requests_per_minute
+        
+        # Count requests in window
+        requests_in_window = [
+            req_time for req_time in self.requests[client_ip]
+            if req_time > window_start
+        ]
+        
+        return max(0, self.requests_per_minute - len(requests_in_window))
 
 class SecurityMiddleware(BaseHTTPMiddleware):
     """
@@ -92,6 +115,9 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         
         # Check rate limit
         if not self.rate_limiter.is_allowed(client_ip):
+            remaining = self.rate_limiter.get_remaining_requests(client_ip)
+            reset_time = int(time.time() + 60)  # Reset in 60 seconds
+            
             logger.warning(
                 "rate_limit_exceeded",
                 extra={
@@ -99,6 +125,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     "client_ip": client_ip,
                     "path": request.url.path,
                     "limit": self.rate_limiter.requests_per_minute,
+                    "remaining": remaining,
+                    "reset_time": reset_time
                 }
             )
             
@@ -108,23 +136,31 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     "error": "Too many requests",
                     "message": f"Rate limit: {self.rate_limiter.requests_per_minute} requests per minute",
                     "request_id": request_id,
+                    "retry_after": 60
                 },
-                headers={"Retry-After": "60"}
+                headers={
+                    "Retry-After": "60",
+                    "X-RateLimit-Limit": str(self.rate_limiter.requests_per_minute),
+                    "X-RateLimit-Remaining": str(remaining),
+                    "X-RateLimit-Reset": str(reset_time)
+                }
             )
         
         # Process request
         response = await call_next(request)
         
-        # Add security headers
+        # Always add security headers (override if needed)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["X-Request-ID"] = request_id
         
-        # Add CORS headers (will be overridden by CORS middleware if present)
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-API-Key"
+        # Add rate limit headers
+        remaining = self.rate_limiter.get_remaining_requests(client_ip)
+        reset_time = int(time.time() + 60)
+        response.headers["X-RateLimit-Limit"] = str(self.rate_limiter.requests_per_minute)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(reset_time)
         
         return response
