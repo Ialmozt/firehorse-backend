@@ -1,0 +1,406 @@
+./frontend/node_modules/path-key/index.d.ts:	// TODO: Remove this for the next major release, refactor the whole definition to:
+./frontend/node_modules/typescript/lib/typescript.d.ts:             * A request to get TODO comments from the file
+./frontend/node_modules/typescript/lib/typescript.d.ts:                 * Array of target TodoCommentDescriptors that describes TODO comments to be found
+./frontend/node_modules/callsites/index.d.ts:	// TODO: Remove this for the next major release, refactor the whole definition to:
+./frontend/node_modules/@types/react-dom/static.d.ts:// TODO: Ideally TypeScripts standard library would include this type.
+./frontend/node_modules/@types/react-dom/server.d.ts:// TODO: Ideally TypeScripts standard library would include this type.
+./frontend/node_modules/@types/react-dom/index.d.ts:    // TODO: Upstream to microsoft/TypeScript-DOM-lib-generator -> w3c/webref
+./frontend/node_modules/@types/react-dom/index.d.ts:    // TODO: These should only be allowed with `as: 'image'` but it's not trivial to write tests against the full TS support matrix.
+./frontend/node_modules/@types/react/ts5.0/index.d.ts:    // TODO: generalize this to everything in `keyof ReactHTML`, not just "input"
+./frontend/node_modules/@types/react/ts5.0/index.d.ts:        // TODO: Ideally we'd infer the constructor signatur from `contextType`.
+./frontend/node_modules/@types/react/ts5.0/index.d.ts:    // TODO: change any to unknown when moving to TS v3
+./frontend/node_modules/@types/react/ts5.0/index.d.ts:    // TODO: Move to react-dom
+./frontend/node_modules/@types/react/ts5.0/index.d.ts:    // TODO: Move to react-dom
+./frontend/node_modules/@types/react/ts5.0/index.d.ts:            animate: React.SVGProps<SVGElement>; // TODO: It is SVGAnimateElement but is not in TypeScript's lib.dom.d.ts for now.
+./frontend/node_modules/@types/react/ts5.0/index.d.ts:            animateTransform: React.SVGProps<SVGElement>; // TODO: It is SVGAnimateTransformElement but is not in TypeScript's lib.dom.d.ts for now.
+./frontend/node_modules/@types/react/index.d.ts:    // TODO: generalize this to everything in `keyof ReactHTML`, not just "input"
+./frontend/node_modules/@types/react/index.d.ts:        // TODO: Ideally we'd infer the constructor signatur from `contextType`.
+./frontend/node_modules/@types/react/index.d.ts:    // TODO: change any to unknown when moving to TS v3
+./frontend/node_modules/@types/react/index.d.ts:    // TODO: Move to react-dom
+./frontend/node_modules/@types/react/index.d.ts:    // TODO: Move to react-dom
+./frontend/node_modules/@types/react/index.d.ts:        // TODO: Check impact of making React.ElementType<P = any> = React.JSXElementConstructor<P>
+./frontend/node_modules/@types/react/index.d.ts:            animate: React.SVGProps<SVGElement>; // TODO: It is SVGAnimateElement but is not in TypeScript's lib.dom.d.ts for now.
+./frontend/node_modules/@types/react/index.d.ts:            animateTransform: React.SVGProps<SVGElement>; // TODO: It is SVGAnimateTransformElement but is not in TypeScript's lib.dom.d.ts for now.
+./frontend/node_modules/@types/node/compatibility/iterators.d.ts:// TODO: remove once this package no longer supports TS 5.5, and replace NodeJS.BuiltinIteratorReturn with BuiltinIteratorReturn.
+./frontend/node_modules/@types/node/fs.d.ts:     * <!-- TODO: link MDN docs for disposables once https://github.com/mdn/content/pull/38027 lands -->
+./frontend/node_modules/@types/node/fs.d.ts:    // TODO: remove in future major
+./frontend/node_modules/@types/node/fs.d.ts:    // TODO: remove in future major
+./frontend/node_modules/@types/node/fs.d.ts:    // TODO: remove default in future major version
+./frontend/node_modules/@types/node/fs.d.ts:    // TODO: remove default in future major version
+./frontend/node_modules/@types/node/fs.d.ts:    // TODO: collapse
+./frontend/node_modules/@types/node/stream.d.ts:        // TODO: this interface never existed; remove in next major
+./frontend/node_modules/@types/node/stream.d.ts:        // TODO: these should all take webstream arguments
+./frontend/node_modules/@types/node/buffer.buffer.d.ts:        // TODO: remove globals in future version
+./frontend/node_modules/@types/node/worker_threads.d.ts:    // TODO: remove in a future major @types/node version.
+./frontend/node_modules/@types/node/wasi.d.ts:        start(instance: object): number; // TODO: avoid DOM dependency until WASM moved to own lib.
+./frontend/node_modules/@types/node/wasi.d.ts:        initialize(instance: object): void; // TODO: avoid DOM dependency until WASM moved to own lib.
+./frontend/node_modules/@types/node/wasi.d.ts:        readonly wasiImport: NodeJS.Dict<any>; // TODO: Narrow to DOM types
+./frontend/node_modules/@types/node/test.d.ts:             * Shorthand for marking a suite as `TODO`. This is the same as calling {@link suite} with `options.todo` set to `true`.
+./frontend/node_modules/@types/node/test.d.ts:         * Shorthand for marking a test as `TODO`. This is the same as calling {@link test} with `options.todo` set to `true`.
+./frontend/node_modules/@types/node/test.d.ts:                     * The total number of TODO tests.
+./frontend/node_modules/@types/node/test.d.ts:             * This function adds a `TODO` directive to the test's output. If `message` is
+./frontend/node_modules/@types/node/test.d.ts:             *   // This test is marked as `TODO`
+./frontend/node_modules/@types/node/test.d.ts:             * @param message Optional `TODO` message.
+./frontend/node_modules/@types/node/test.d.ts:             * If truthy, the test marked as `TODO`. If a string is provided, that string is displayed in
+./frontend/node_modules/@types/node/test.d.ts:             * the test results as the reason why the test is `TODO`.
+./frontend/node_modules/@types/node/timers.d.ts:            // TODO: remove in a future major version bump
+./frontend/node_modules/@types/node/globals.typedarray.d.ts:        // TODO: remove once @types/node no longer supports TS 5.6, and replace with native types.
+./frontend/node_modules/@types/node/util.d.ts:    export type CustomInspectFunction = (depth: number, options: InspectOptionsStylized) => any; // TODO: , inspect: inspect
+./frontend/node_modules/@types/node/fs/promises.d.ts:    // TODO: Add `EventEmitter` close
+./frontend/node_modules/@types/node/fs/promises.d.ts:     * <!-- TODO: link MDN docs for disposables once https://github.com/mdn/content/pull/38027 lands -->
+./frontend/node_modules/@types/node/child_process.d.ts:    // TODO: Just Plain Wrong™ (see also nodejs/node#57392)
+./frontend/node_modules/@types/node/child_process.d.ts:    // TODO: execFile exceptions can take many forms... this accurately describes none of them
+./frontend/node_modules/@types/node/perf_hooks.d.ts:    // TODO: PerformanceNodeEntry is missing
+./frontend/node_modules/@types/node/module.d.ts:        // TODO: consider removing in a future major version update
+./frontend/node_modules/@types/node/crypto.d.ts:    // TODO: signing algorithm type
+./frontend/node_modules/@types/node/crypto.d.ts:        // TODO: remove in next major
+./frontend/node_modules/@typescript-eslint/utils/dist/ts-eslint/SourceCode.d.ts:     * TODO: rename to 'tokens'
+./frontend/node_modules/@jridgewell/gen-mapping/src/gen-mapping.ts:  // TODO: implement originalScopes/generatedRanges
+./frontend/node_modules/@jridgewell/remapping/src/build-source-map-tree.ts:    // TODO: We should eventually support async loading of sourcemap files.
+./frontend/node_modules/@jridgewell/remapping/src/source-map-tree.ts:  // TODO: Eventually support sourceRoot, which has to be removed because the sources are already
+./frontend/node_modules/undici-types/cache-interceptor.d.ts:     * TODO docs
+./frontend/node_modules/undici-types/h2c-client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/h2c-client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/h2c-client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/h2c-client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/h2c-client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/h2c-client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/webidl.d.ts:  // TODO(@KhafraDev): a type could likely be implemented that can infer the return type
+./frontend/node_modules/undici-types/client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/client.d.ts:    /** TODO */
+./frontend/node_modules/undici-types/client.d.ts:    /** TODO */
+./frontend/node_modules/zod/src/v4/classic/tests/lazy.test.ts:// TODO
+./frontend/node_modules/zod/src/v4/classic/tests/refine.test.ts:  // TODO: Implement type narrowing for superRefine
+./frontend/node_modules/zod/src/v4/classic/from-json-schema.ts:      // TODO: uniqueItems is not supported
+./frontend/node_modules/zod/src/v4/classic/from-json-schema.ts:      // TODO: contains/minContains/maxContains are not supported
+./app/api.py:    # TODO: Save to DB + Queue (Итерация 3)
+./src/prompts/__init__.py:- Add TODO comments for potential improvements
+./src/main.py:    # TODO: Implement proper signature verification
+./venv/lib/python3.12/site-packages/anyio/_backends/_trio.py:    # TODO: remove explicit context copying when trio 0.20 is the minimum requirement
+./venv/lib/python3.12/site-packages/anyio/_backends/_trio.py:# TODO: remove this workaround when trio 0.20 is the minimum requirement
+./venv/lib/python3.12/site-packages/anyio/_backends/_trio.py:    # TODO: remove explicit context copying when trio 0.20 is the minimum requirement
+./venv/lib/python3.12/site-packages/psycopg2/_range.py:# TODO: probably won't work with infs, nans and other tricky cases.
+./venv/lib/python3.12/site-packages/psycopg2/tz.py:# TODO: pre-generate some interesting time zones?
+./venv/lib/python3.12/site-packages/click/_termui_impl.py:    # TODO: This never terminates if the passed generator never terminates.
+./venv/lib/python3.12/site-packages/httpx/_auth.py:        # TODO: implement auth-int
+./venv/lib/python3.12/site-packages/pygments/lexers/tcl.py:            (r'\}', Keyword),  # HACK: somehow we miscounted our braces
+./venv/lib/python3.12/site-packages/pygments/lexers/dns.py:            # TODO, $GENERATE https://bind9.readthedocs.io/en/v9.18.14/chapter3.html#soa-rr
+./venv/lib/python3.12/site-packages/pygments/lexers/markup.py:            # FIXME: aren't the offsets wrong?
+./venv/lib/python3.12/site-packages/pygments/lexers/markup.py:            (r'^(\* )(TODO)( .*)',
+./venv/lib/python3.12/site-packages/pygments/lexers/markup.py:            (r'^(\*\*+ )(TODO)( .*)',
+./venv/lib/python3.12/site-packages/pygments/lexers/markup.py:            # Unordered lists items, including TODO items and description items
+./venv/lib/python3.12/site-packages/pygments/lexers/markup.py:            # TODO: language-dependent syntax highlighting (see Markdown lexer)
+./venv/lib/python3.12/site-packages/pygments/lexers/markup.py:            (_inline(r'=', r'='), String), # TODO token
+./venv/lib/python3.12/site-packages/pygments/lexers/markup.py:            # FIXME: Use ABC lexer in the future
+./venv/lib/python3.12/site-packages/pygments/lexers/inferno.py:    TODO:
+./venv/lib/python3.12/site-packages/pygments/lexers/inferno.py:# TODO:
+./venv/lib/python3.12/site-packages/pygments/lexers/modula2.py:        'TODO', 'FFI', 'ADDR', 'VARGLIST', 'VARGC',
+./venv/lib/python3.12/site-packages/pygments/lexers/objective.py:                # TODO unsure if ellipses are allowed elsewhere, see
+./venv/lib/python3.12/site-packages/pygments/lexers/objective.py:            (r':param: [a-zA-Z_]\w*|:returns?:|(FIXME|MARK|TODO):',
+./venv/lib/python3.12/site-packages/pygments/lexers/textfmts.py:    # TODO: Make date regex more ISO 8601 compliant
+./venv/lib/python3.12/site-packages/pygments/lexers/perl.py:    # TODO: give this to a perl guy who knows how to parse perl...
+./venv/lib/python3.12/site-packages/pygments/lexers/templates.py:            # TODO support other Python syntax like $foo['bar']
+./venv/lib/python3.12/site-packages/pygments/lexers/templates.py:            # FIXME: I want to make these keywords but still parse attributes.
+./venv/lib/python3.12/site-packages/pygments/lexers/dotnet.py:# TODO support multiple languages within the same source file
+./venv/lib/python3.12/site-packages/pygments/lexers/urbi.py:    # TODO
+./venv/lib/python3.12/site-packages/pygments/lexers/_asy_builtins.py:    TODO: perl/python script in Asymptote SVN similar to asy-list.pl but only
+./venv/lib/python3.12/site-packages/pygments/lexers/fantom.py:            # TODO: highlight references in fandocs
+./venv/lib/python3.12/site-packages/pygments/lexers/fantom.py:        'insideUri': [  # TODO: remove copy/paste str/uri
+./venv/lib/python3.12/site-packages/pygments/lexers/javascript.py:            # TODO: should this include single-line comments and allow nesting strings?
+./venv/lib/python3.12/site-packages/pygments/lexers/wgsl.py:            # TODO: Treat context-depedendent names specially
+./venv/lib/python3.12/site-packages/pygments/lexers/wgsl.py:            # TODO: templates start and end tokens.
+./venv/lib/python3.12/site-packages/pygments/lexers/scripting.py:            # TODO: JES3 statement
+./venv/lib/python3.12/site-packages/pygments/lexers/julia.py:            # FIXME: This escape pattern is not perfect.
+./venv/lib/python3.12/site-packages/pygments/lexers/rnc.py:            # TODO single quoted strings and escape sequences outside of
+./venv/lib/python3.12/site-packages/pygments/lexers/c_like.py:            # TODO: "correctly" parse complex code attributes
+./venv/lib/python3.12/site-packages/pygments/lexers/nix.py:            # TODO: we should probably escape also here ''${ \${
+./venv/lib/python3.12/site-packages/pygments/lexers/nix.py:        # TODO: let/in
+./venv/lib/python3.12/site-packages/pygments/lexers/parsers.py:            # TODO finish implementing other possibilities for scope
+./venv/lib/python3.12/site-packages/pygments/lexers/haskell.py:            # (HACK, but it makes sense to push two instances, believe me)
+./venv/lib/python3.12/site-packages/pygments/lexers/haskell.py:            # (HACK, but it makes sense to push two instances, believe me)
+./venv/lib/python3.12/site-packages/pygments/lexers/haskell.py:    FIXME: A Cryptol2 lexer based on the lexemes defined in the Haskell 98 Report.
+./venv/lib/python3.12/site-packages/pygments/lexers/haskell.py:            # TODO: these don't match the comments in docs, remove.
+./venv/lib/python3.12/site-packages/pygments/lexers/haskell.py:            # (HACK, but it makes sense to push two instances, believe me)
+./venv/lib/python3.12/site-packages/pygments/lexers/meson.py:    # TODO String interpolation @VARNAME@ inner matches
+./venv/lib/python3.12/site-packages/pygments/lexers/meson.py:    # TODO keyword_arg: value inner matches
+./venv/lib/python3.12/site-packages/pygments/lexers/css.py:            # TODO: broken, and prone to infinite loops.
+./venv/lib/python3.12/site-packages/pygments/lexers/mips.py:    # TODO: add '*.s' and '*.asm', which will require designing an analyse_text
+./venv/lib/python3.12/site-packages/pygments/lexers/graphics.py:            # FIXME when e is present, no decimal point needed
+./venv/lib/python3.12/site-packages/pygments/lexers/graphics.py:            # FIXME when e is present, no decimal point needed
+./venv/lib/python3.12/site-packages/pygments/lexers/ada.py:            # TODO: use Name.Namespace if appropriate.  This needs
+./venv/lib/python3.12/site-packages/pygments/lexers/textedit.py:            # TODO: regexes can have other delims
+./venv/lib/python3.12/site-packages/pygments/lexers/textedit.py:        # TODO: builtins are only subsequent tokens on lines
+./venv/lib/python3.12/site-packages/pygments/lexers/oberon.py:            # TODO: nested comments (* (* ... *) ... (* ... *) *) not supported!
+./venv/lib/python3.12/site-packages/pygments/lexers/python.py:        # different tokens.  TODO: DelegatingLexer should support this
+./venv/lib/python3.12/site-packages/pygments/lexers/openscad.py:            (r':param: [a-zA-Z_]\w*|:returns?:|(FIXME|MARK|TODO):',
+./venv/lib/python3.12/site-packages/pygments/lexers/mojo.py:                "varname",  # TODO varname the right fit?
+./venv/lib/python3.12/site-packages/pygments/lexers/mojo.py:                        "async for",  # TODO https://docs.modular.com/mojo/roadmap#no-async-for-or-async-with
+./venv/lib/python3.12/site-packages/pygments/lexers/mojo.py:                        "async with",  # TODO https://docs.modular.com/mojo/roadmap#no-async-for-or-async-with
+./venv/lib/python3.12/site-packages/pygments/lexers/mojo.py:        # TODO supported?
+./venv/lib/python3.12/site-packages/pygments/lexers/sql.py:            # TODO: better logging
+./venv/lib/python3.12/site-packages/pygments/lexers/sql.py:    # FIXME: use inheritance
+./venv/lib/python3.12/site-packages/pygments/lexers/sql.py:                # TODO: better handle multiline comments at the end with
+./venv/lib/python3.12/site-packages/pygments/lexers/sql.py:            # TODO: Backslash escapes?
+./venv/lib/python3.12/site-packages/pygments/lexers/typst.py:            # FIXME: make this work
+./venv/lib/python3.12/site-packages/pygments/lexers/testing.py:            (r'(?i)\bTODO\b', Comment.Preproc),
+./venv/lib/python3.12/site-packages/pygments/lexers/jvm.py:    # TODO / should divide keywords/symbols into namespace/rest
+./venv/lib/python3.12/site-packages/pygments/lexers/jvm.py:            (r'\S+\s+', Text)   # TODO: make tests pass without \s+
+./venv/lib/python3.12/site-packages/pygments/filters/__init__.py:       highlight ``XXX``, ``TODO``, ``FIXME``, ``BUG`` and ``NOTE``.
+./venv/lib/python3.12/site-packages/pygments/filters/__init__.py:       Now recognizes ``FIXME`` by default.
+./venv/lib/python3.12/site-packages/pygments/filters/__init__.py:                            ['XXX', 'TODO', 'FIXME', 'BUG', 'NOTE'])
+./venv/lib/python3.12/site-packages/pygments/formatters/latex.py:        # TODO: add support for background colors
+./venv/lib/python3.12/site-packages/pygments/formatters/terminal256.py:# TODO:
+./venv/lib/python3.12/site-packages/pygments/formatters/img.py:            # TODO: make sure tab expansion happens earlier in the chain.  It
+./venv/lib/python3.12/site-packages/pygments/lexer.py:    TODO: clean up the code here.
+./venv/lib/python3.12/site-packages/uvicorn/protocols/websockets/wsproto_impl.py:            # TODO: Remove `type: ignore` when wsproto fixes the type annotation.
+./venv/lib/python3.12/site-packages/supabase/client.py:        # TODO: Bring up to parity with JS client.
+./venv/lib/python3.12/site-packages/supabase/lib/realtime_client.py:        # TODO: Handle state change callbacks for error and close
+./venv/lib/python3.12/site-packages/supabase/lib/auth_client.py:# TODO - export this from GoTrue-py in next release
+./venv/lib/python3.12/site-packages/h11/_writers.py:    # XX FIXME: could at least make an effort to pull out the status message
+./venv/lib/python3.12/site-packages/h11/_readers.py:            # XX FIXME: we discard chunk extensions. Does anyone care?
+./venv/lib/python3.12/site-packages/h11/_events.py:# XX FIXME: "A recipient MUST ignore (or consider as an error) any fields that
+./venv/lib/python3.12/site-packages/limits/aio/storage/mongodb.py:        # TODO: Fix this hack. It was noticed when running a benchmark
+./venv/lib/python3.12/site-packages/limits/aio/storage/memory.py:    # FIXME: arg limit is not used
+./venv/lib/python3.12/site-packages/fastapi/routing.py:            # TODO: remove when deprecating Pydantic v1
+./venv/lib/python3.12/site-packages/fastapi/_compat.py:            # TODO remove when deprecating Pydantic v1
+./venv/lib/python3.12/site-packages/fastapi/security/oauth2.py:# TODO: import from typing when deprecating Python 3.9
+./venv/lib/python3.12/site-packages/fastapi/encoders.py:# TODO: pv2 should this return strings instead?
+./venv/lib/python3.12/site-packages/fastapi/encoders.py:        # TODO: remove when deprecating Pydantic v1
+./venv/lib/python3.12/site-packages/fastapi/encoders.py:            # TODO: remove when deprecating Pydantic v1
+./venv/lib/python3.12/site-packages/fastapi/param_functions.py:    # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/param_functions.py:    # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/param_functions.py:    # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/param_functions.py:    # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/param_functions.py:    # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/param_functions.py:    # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/param_functions.py:    # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/applications.py:        # TODO: remove when discarding the openapi_prefix parameter
+./venv/lib/python3.12/site-packages/fastapi/openapi/models.py:    # TODO: uncomment and remove below when deprecating Pydantic v1
+./venv/lib/python3.12/site-packages/fastapi/openapi/utils.py:                # TODO: probably make status_code a default class attribute for all
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/fastapi/params.py:        # TODO: update when deprecating Pydantic v1, import these types
+./venv/lib/python3.12/site-packages/pluggy/_hooks.py:        # TODO: Document, or make private.
+./venv/lib/python3.12/site-packages/pluggy/_hooks.py:    # TODO: Document, or make private.
+./venv/lib/python3.12/site-packages/pluggy/_hooks.py:    # TODO: Document, or make private.
+./venv/lib/python3.12/site-packages/typing_extensions.py:                # TODO: Use inspect.VALUE here, and make the annotations lazily evaluated
+./venv/lib/python3.12/site-packages/iniconfig/__init__.py:    # TODO: investigate possible mypy bug wrt matching the passed over data
+./venv/lib/python3.12/site-packages/dateutil/rrule.py:                    # TODO: Check -numweeks for next year.
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:# TODO: pandas.core.tools.datetimes imports this explicitly.  Might be worth
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:                ("Tue", "Tuesday"),     # TODO: "Tues"
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:                ("Thu", "Thursday"),    # TODO: "Thurs"
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:              ("Feb", "February"),      # TODO: "Febr"
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:    # TODO: ERA = ["AD", "BC", "CE", "BCE", "Stardate",
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:                                # TODO: not hit in tests
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:                    # TODO: check that l[i + 1] is integer?
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:                        min_offset = int(l[i + 3])  # TODO: Check that l[i+3] is minute-like?
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:                # TODO: Check if res attributes already set.
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:                # TODO: checking that hour/minute/second are not
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:            value = self._to_decimal(tokens[idx + 2])  # TODO: try/except for this?
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:            # TODO: Are we sure this is the right condition here?
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:        # TODO: Every usage of this function sets res.second to the return
+./venv/lib/python3.12/site-packages/dateutil/parser/_parser.py:        # TODO: Is this going to admit a lot of false-positives for when we
+./venv/lib/python3.12/site-packages/dateutil/zoneinfo/__init__.py:    except IOError as e:  # TODO  switch to FileNotFoundError?
+./venv/lib/python3.12/site-packages/dateutil/zoneinfo/__init__.py:# TODO: Remove after deprecation period.
+./venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:        self.debug = debug  # TODO: We ought to handle 404 cases if debug is set.
+./venv/lib/python3.12/site-packages/starlette/_utils.py:# TODO: once 3.8 is the minimum supported version (27 Jun 2023)
+./venv/lib/python3.12/site-packages/starlette/applications.py:    # TODO: Make `__name` a positional-only argument when we drop Python 3.7 support.
+./venv/lib/python3.12/site-packages/packaging/metadata.py:        # TODO: The spec doesn't say anything about if the keys should be
+./venv/lib/python3.12/site-packages/packaging/metadata.py:    description: _Validator[str] = _Validator()  # TODO 2.1: can be in body
+./venv/lib/python3.12/site-packages/packaging/tags.py:        # TODO: Need to care about 32-bit PPC for ppc64 through 10.2?
+./venv/lib/python3.12/site-packages/packaging/requirements.py:    # TODO: Can we test whether something is contained within a requirement?
+./venv/lib/python3.12/site-packages/packaging/requirements.py:    # TODO: Can we normalize the name and extra name?
+./venv/lib/python3.12/site-packages/tqdm/gui.py:    # TODO: @classmethod: write() on GUI?
+./venv/lib/python3.12/site-packages/tqdm/tk.py:    # TODO: @classmethod: write()?
+./venv/lib/python3.12/site-packages/tqdm/cli.py:# TODO: add custom support for some of the following?
+./venv/lib/python3.12/site-packages/tqdm/cli.py:        TODO: find out why this is needed.
+./venv/lib/python3.12/site-packages/tqdm/__init__.py:from .cli import main  # TODO: remove in v5.0.0
+./venv/lib/python3.12/site-packages/tqdm/__init__.py:from .gui import tqdm as tqdm_gui  # TODO: remove in v5.0.0
+./venv/lib/python3.12/site-packages/tqdm/__init__.py:from .gui import trange as tgrange  # TODO: remove in v5.0.0
+./venv/lib/python3.12/site-packages/tqdm/rich.py:    # TODO: @classmethod: write()?
+./venv/lib/python3.12/site-packages/tqdm/std.py:        # TODO: private method
+./venv/lib/python3.12/site-packages/tqdm/utils.py:# TODO consider using wcswidth third-party package for 0-width characters
+./venv/lib/python3.12/site-packages/pydantic_core/core_schema.py:            TODO: use of a tzinfo where offset changes based on the datetime is not yet supported
+./venv/lib/python3.12/site-packages/prometheus_client/metrics_core.py:            # TODO: Handle None gsum_value correctly. Currently a None will fail exposition but is allowed here.
+./venv/lib/python3.12/site-packages/prometheus_client/values.py:            # TODO: Implement exemplars for multiprocess mode.
+./venv/lib/python3.12/site-packages/prometheus_client/values.py:            # TODO: Implement exemplars for multiprocess mode.
+./venv/lib/python3.12/site-packages/prometheus_client/openmetrics/parser.py:        # TODO: check labelvalues are valid utf8
+./venv/lib/python3.12/site-packages/_pytest/junitxml.py:            # TODO: breaks for --dist=each
+./venv/lib/python3.12/site-packages/_pytest/pathlib.py:# TODO(py38): Replace with shutil.copytree(..., symlinks=True, dirs_exist_ok=True)
+./venv/lib/python3.12/site-packages/_pytest/nodes.py:    # TODO: This omits the style= parameter which breaks Liskov Substitution.
+./venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:        # TODO: evaluate generating upward relative paths
+./venv/lib/python3.12/site-packages/_pytest/legacypath.py:        # TODO: This assert is probably not valid in all cases.
+./venv/lib/python3.12/site-packages/_pytest/reports.py:    # TODO: Check if this is actually reachable.
+./venv/lib/python3.12/site-packages/_pytest/reports.py:        # TODO: Investigate whether the duck typing is really necessary here.
+./venv/lib/python3.12/site-packages/_pytest/_code/code.py:        # TODO(py38): change to positional only.
+./venv/lib/python3.12/site-packages/_pytest/config/__init__.py:            # TODO: This assert is probably not valid in all cases.
+./venv/lib/python3.12/site-packages/_pytest/main.py:                                # TODO: Remove parametrized workaround once collection structure contains
+./venv/lib/python3.12/site-packages/_pytest/fixtures.py:            # FIXME: _fixturedef is not defined on FixtureRequest (this class),
+./venv/lib/python3.12/site-packages/_pytest/fixtures.py:            # TODO: Fix this type ignore. Either add assert or adjust types.
+./venv/lib/python3.12/site-packages/_pytest/fixtures.py:        # TODO: Remove ignore once _pyfuncitem is properly typed.
+./venv/lib/python3.12/site-packages/_pytest/compat.py:    # TODO(RonnyPfannschmidt): This function should be refactored when we
+./venv/lib/python3.12/site-packages/_pytest/assertion/__init__.py:        # TODO(typing): Add a protocol for mark_rewrite() and use it
+./venv/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:            # TODO: This assert should not be needed.
+./venv/lib/python3.12/site-packages/_pytest/mark/structures.py:            # TODO: Refactor to fix this type-ignore. Currently the following
+./venv/lib/python3.12/site-packages/_pytest/python.py:        # TODO: Improve the type of `parent` such that assert/ignore aren't needed.
+./venv/lib/python3.12/site-packages/_pytest/python.py:    # TODO: If escaping is turned off and the user passes bytes,
+./venv/lib/python3.12/site-packages/_pytest/python.py:        # TODO: Fix this type ignore.
+./venv/lib/python3.12/site-packages/_pytest/python.py:    # TODO: Type ignored -- breaks Liskov Substitution.
+./venv/lib/python3.12/site-packages/_pytest/doctest.py:    # TODO: Type ignored -- breaks Liskov Substitution.
+./venv/lib/python3.12/site-packages/_pytest/doctest.py:            # TODO: ReprFileLocation doesn't expect a None lineno.
+./venv/lib/python3.12/site-packages/_pytest/capture.py:        # TODO: This type error is real, need to fix.
+./venv/lib/python3.12/site-packages/_pytest/terminal.py:        # TODO: Revisit after marks scope would be fixed.
+./venv/lib/python3.12/site-packages/pydantic/deprecated/json.py:# TODO: Add a suggested migration path once there is a way to use custom encoders
+./venv/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:        # TODO: in theory we should check that the schema accepts a serialization key
+./venv/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:        # TODO: do we really need to resolve type vars here?
+./venv/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:                # TODO: something like https://github.com/pydantic/pydantic/issues/5952
+./venv/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:        TODO support functional validators once we support them in Config
+./venv/lib/python3.12/site-packages/pydantic/_internal/_core_utils.py:            # TODO: Replace this with a (new) CoreSchema that, if present at any level, makes validation fail
+./venv/lib/python3.12/site-packages/pydantic/_internal/_core_utils.py:# TODO: Should we move _WalkCoreSchema into pydantic_core proper?
+./venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:            # TODO: We should probably do something with this so that validate_assignment behaves properly
+./venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:                # TODO: same note as above
+./venv/lib/python3.12/site-packages/pydantic/_internal/_generics.py:    # TODO: This could be unified with `get_standard_typevars_map` if we stored the generic metadata
+./venv/lib/python3.12/site-packages/pydantic/_internal/_core_metadata.py:    pydantic_typed_dict_cls: type[Any] | None  # TODO: Consider moving this into the pydantic-core TypedDictSchema
+./venv/lib/python3.12/site-packages/pydantic/json_schema.py:        # This reflects the v1 behavior; TODO: we should make it possible to exclude OpenAPI stuff from the JSON schema
+./venv/lib/python3.12/site-packages/pydantic/json_schema.py:        # TODO: Need to read the default value off of model config or whatever
+./venv/lib/python3.12/site-packages/pydantic/json_schema.py:        use_strict = schema.get('strict', False)  # TODO: replace this default False
+./venv/lib/python3.12/site-packages/pydantic/json_schema.py:        # TODO: When support for Python 3.7 is dropped, uncomment the block on `test_json_schema`
+./venv/lib/python3.12/site-packages/pydantic/main.py:                    # TODO: Make sure validation fails if there are still undefined types, perhaps using MockValidator
+./venv/lib/python3.12/site-packages/pydantic/main.py:            # TODO - matching error
+./venv/lib/python3.12/site-packages/pydantic/v1/networks.py:    # TODO: Needed to generic "Parts" for "Replica Set", "Sharded Cluster", and other mongodb deployment modes
+./venv/lib/python3.12/site-packages/pydantic/v1/utils.py:            # TODO: replace annotation with actual expected types once #1055 solved
+./venv/lib/python3.12/site-packages/pydantic/mypy.py:                    # TODO: Only do this if the first argument of the decorated function is `cls`
+./venv/lib/python3.12/site-packages/pydantic/mypy.py:                # TODO: We shouldn't be performing type operations during the main
+./venv/lib/python3.12/site-packages/slowapi/wrappers.py:        # FIXME: how to get the request here?
+./venv/lib/python3.12/site-packages/pip/_internal/network/lazy_wheel.py:        # TODO: Get range requests to be correctly cached
+./venv/lib/python3.12/site-packages/pip/_internal/models/installation_report.py:            # TODO: currently, the resolver uses the default environment to evaluate
+./venv/lib/python3.12/site-packages/pip/_internal/build_env.py:                # FIXME: Consider direct URL?
+./venv/lib/python3.12/site-packages/pip/_internal/locations/base.py:# FIXME doesn't account for venv linked to global site-packages
+./venv/lib/python3.12/site-packages/pip/_internal/locations/base.py:        # FIXME: keep src in cwd for now (it is not a temporary folder)
+./venv/lib/python3.12/site-packages/pip/_internal/commands/inspect.py:            # TODO tags? scheme?
+./venv/lib/python3.12/site-packages/pip/_internal/metadata/importlib/_compat.py:    HACK: This relies on importlib.metadata's private ``_path`` attribute. Not
+./venv/lib/python3.12/site-packages/pip/_internal/metadata/base.py:from pip._internal.utils.compat import stdlib_pkgs  # TODO: Move definition here.
+./venv/lib/python3.12/site-packages/pip/_internal/metadata/base.py:        # TODO: this property is relatively costly to compute, memoize it ?
+./venv/lib/python3.12/site-packages/pip/_internal/metadata/base.py:                # TODO: get project location from second line of egg_link file
+./venv/lib/python3.12/site-packages/pip/_internal/req/constructors.py:        # TODO: The is_installable_dir test here might not be necessary
+./venv/lib/python3.12/site-packages/pip/_internal/req/req_uninstall.py:            # FIXME: need a test for this elif block
+./venv/lib/python3.12/site-packages/pip/_internal/req/req_file.py:            # FIXME: it would be nice to keep track of the source
+./venv/lib/python3.12/site-packages/pip/_internal/req/req_file.py:    # TODO: handle space after '\'.
+./venv/lib/python3.12/site-packages/pip/_internal/req/req_install.py:                # TODO: Remove these two variants when packaging is upgraded to
+./venv/lib/python3.12/site-packages/pip/_internal/req/req_install.py:        # FIXME: Is there a better place to create the build_dir? (hg and bzr
+./venv/lib/python3.12/site-packages/pip/_internal/req/req_set.py:        TODO remove this property together with the legacy resolver, since the new
+./venv/lib/python3.12/site-packages/pip/_internal/vcs/versioncontrol.py:    # TODO: Remove `if TYPE_CHECKING` when dropping support for Python 3.7.
+./venv/lib/python3.12/site-packages/pip/_internal/vcs/subversion.py:                # FIXME: should we warn?
+./venv/lib/python3.12/site-packages/pip/_internal/cache.py:                # TODO: use DirectUrl.equivalent when
+./venv/lib/python3.12/site-packages/pip/_internal/utils/subprocess.py:    # TODO: Remove `if TYPE_CHECKING` when dropping support for Python 3.7.
+./venv/lib/python3.12/site-packages/pip/_internal/utils/unpacking.py:        # FIXME: handle?
+./venv/lib/python3.12/site-packages/pip/_internal/utils/unpacking.py:        # FIXME: magic signatures?
+./venv/lib/python3.12/site-packages/pip/_internal/index/collector.py:        # TODO: In the future, it would be nice if pip supported PEP 691
+./venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/factory.py:        # TODO: Check already installed candidate, and use it if the link and
+./venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/factory.py:        # TODO: Are there more cases this needs to return True? Editable?
+./venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/candidates.py:        # TODO: Supply reason based on force_reinstall and upgrade_strategy.
+./venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/candidates.py:        # TODO: Remove this attribute when packaging is upgraded to support the
+./venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/found_candidates.py:    # TODO: Remove this block after dropping Python 3.8 support.
+./venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/provider.py:    # HACK: Theoretically we should check whether this identifier is a valid
+./venv/lib/python3.12/site-packages/pip/_internal/operations/prepare.py:        # TODO: separate this part out from RequirementPreparer when the v1
+./venv/lib/python3.12/site-packages/pip/_internal/operations/prepare.py:            # FIXME: https://github.com/pypa/pip/issues/11943
+./venv/lib/python3.12/site-packages/pip/_internal/cli/base_command.py:        # TODO: Try to get these passing down from the command?
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/connectionpool.py:        # TODO: Add optional support for socket.gethostbyname checking.
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py:# TODO: In v2 we can remove this sentinel and metaclass with deprecated options.
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py:        # TODO: Deprecated, remove in v2.0
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py:        # TODO: If already given in **kw we use what's given to us
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py:        # TODO: For now favor if the Retry implementation sets its own method_whitelist
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py:            # TODO: Remove this deprecated alias in v2.0
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/url.py:    # TODO: Remove this when we break backwards compatibility.
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/response.py:    # FIXME: Can we do this somehow without accessing private httplib _method?
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/pyopenssl.py:        # FIXME rethrow compatible exceptions should we ever use this
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/securetransport.py:        # TODO: should I do clean shutdown here? Do I have to?
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/securetransport.py:        # TODO: Well, crap.
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/securetransport.py:        # TODO: Update in line with above.
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/response.py:                # FIXME: Ideally we'd like to include the url in the ReadTimeoutError but
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/response.py:                # FIXME: Is there a better way to differentiate between SSLErrors?
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/response.py:        # FIXME: Rewrite this method and make it a class with a better structured logic.
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/connection.py:            # TODO: Fix tunnel so it doesn't depend on self.sock state.
+./venv/lib/python3.12/site-packages/pip/_vendor/urllib3/exceptions.py:    # TODO(t-8ch): Stop inheriting from AssertionError in v2.0.
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/lexers/python.py:        # different tokens.  TODO: DelegatingLexer should support this
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/filters/__init__.py:       highlight ``XXX``, ``TODO``, ``FIXME``, ``BUG`` and ``NOTE``.
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/filters/__init__.py:       Now recognizes ``FIXME`` by default.
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/filters/__init__.py:                            ['XXX', 'TODO', 'FIXME', 'BUG', 'NOTE'])
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/formatters/latex.py:        # TODO: add support for background colors
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/formatters/terminal256.py:# TODO:
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/formatters/img.py:            # TODO: make sure tab expansion happens earlier in the chain.  It
+./venv/lib/python3.12/site-packages/pip/_vendor/pygments/lexer.py:    TODO: clean up the code here.
+./venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py:    # FIXME: 'ZipProvider._extract_resource' is too complex (12)
+./venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py:    # FIXME: 'Distribution.insert_on' is too complex (13)
+./venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py:            # TODO: remove this except clause when python/cpython#103632 is fixed.
+./venv/lib/python3.12/site-packages/pip/_vendor/requests/adapters.py:                # TODO: Remove this in 3.0.0: see #2811
+./venv/lib/python3.12/site-packages/pip/_vendor/requests/hooks.py:# TODO: response is the only one
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/codingstatemachinedict.py:    # TODO: Remove the else block and TYPE_CHECKING check when dropping support
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcsgroupprober.py:        # TODO: See if using ISO-8859-8 Hebrew model works better here, since
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcsgroupprober.py:        # TODO: ORDER MATTERS HERE. I changed the order vs what was in master
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcsgroupprober.py:            # TODO: Restore Hungarian encodings (iso-8859-2 and windows-1250)
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/universaldetector.py:                    # TODO: This encoding is not supported by Python. Should remove?
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/universaldetector.py:                    # TODO: This encoding is not supported by Python. Should remove?
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/metadata/languages.py:# TODO: Add Ukrainian (KOI8-U)
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcharsetprober.py:        # TODO: Make filter_international_words keep things in self.alphabet
+./venv/lib/python3.12/site-packages/pip/_vendor/chardet/resultdict.py:    # TODO: Remove the else block and TYPE_CHECKING check when dropping support
+./venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py:        # TODO should we eliminate the recursion?
+./venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py:                    # TODO check whether we need to call `list_hook`
+./venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py:            # TODO is the interaction between `list_hook` and `use_list` ok?
+./venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py:                    # TODO check whether we need to call hooks
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py:        # TODO check k, v for valid values
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py:                # FIXME handle the case where zipfile is not available
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py:    # TODO document the mapping API and UNKNOWN default key
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py:            # FIXME this rejects UNKNOWN, is that right?
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py:    # TODO could add iter* variants
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py:        # TODO: any other fields wanted
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py:        XXX TODO Note: this cache is never actually cleared. It's assumed that
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py:                # TODO SHA256 digest
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/wheel.py:            # TODO version verification
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/version.py:        TODO: fill this out
+./venv/lib/python3.12/site-packages/pip/_vendor/distlib/version.py:    # TODO: unintended side-effect on, e.g., "2003.05.09"
+./venv/lib/python3.12/site-packages/pip/_vendor/cachecontrol/controller.py:        # TODO: There is an assumption that the result will be a
+./venv/lib/python3.12/site-packages/pip/_vendor/cachecontrol/filewrapper.py:        # TODO: Add some logging here...
+./venv/lib/python3.12/site-packages/pip/_vendor/truststore/_macos.py:                # TODO: Not sure if we need the SecTrustResultType for anything?
+./venv/lib/python3.12/site-packages/pip/_vendor/packaging/tags.py:        # TODO: Need to care about 32-bit PPC for ppc64 through 10.2?
+./venv/lib/python3.12/site-packages/pip/_vendor/packaging/requirements.py:    # TODO: Can we test whether something is contained within a requirement?
+./venv/lib/python3.12/site-packages/pip/_vendor/packaging/requirements.py:    # TODO: Can we normalize the name and extra name?
+./venv/lib/python3.12/site-packages/pip/_vendor/rich/text.py:        # TODO: This is a little inefficient, it is only used by full justify
+./venv/lib/python3.12/site-packages/pip/_vendor/rich/cells.py:# TODO: This is inefficient
+./venv/lib/python3.12/site-packages/pip/_vendor/rich/cells.py:# TODO: This might not work with CWJ type characters
+./venv/lib/python3.12/site-packages/openai/_base_client.py:# TODO: make base page type vars covariant
+./venv/lib/python3.12/site-packages/openai/_base_client.py:        # TODO: do we have to preprocess params here?
+./venv/lib/python3.12/site-packages/openai/_base_client.py:        # TODO: report this error to httpx
+./venv/lib/python3.12/site-packages/openai/_base_client.py:            # TODO: type ignore is required as stringify_items is well typed but we can't be
+./venv/lib/python3.12/site-packages/openai/_base_client.py:            # TODO(someday): support non asyncio runtimes here
+./venv/lib/python3.12/site-packages/openai/_base_client.py:    # TODO: untested
+./venv/lib/python3.12/site-packages/openai/_base_client.py:    # TODO: untested
+./venv/lib/python3.12/site-packages/openai/_qs.py:                        # TODO: error if unknown format
+./venv/lib/python3.12/site-packages/openai/_compat.py:        # TODO: provide an error message here?
+./venv/lib/python3.12/site-packages/openai/resources/vector_stores/file_batches.py:        # TODO: don't poll unless necessary??
+./venv/lib/python3.12/site-packages/openai/resources/vector_stores/file_batches.py:        # TODO: don't poll unless necessary??
+./venv/lib/python3.12/site-packages/openai/pagination.py:            # TODO emit warning log
+./venv/lib/python3.12/site-packages/openai/pagination.py:            # TODO emit warning log
+./venv/lib/python3.12/site-packages/openai/_models.py:        # TODO
+./venv/lib/python3.12/site-packages/openai/_models.py:elif not TYPE_CHECKING:  # TODO: condition is weird
+./venv/lib/python3.12/site-packages/openai/_utils/_transform.py:# TODO: support for drilling globals() and locals()
+./venv/lib/python3.12/site-packages/openai/_utils/_transform.py:# TODO: ensure works correctly with forward references in all cases
+./venv/lib/python3.12/site-packages/openai/_utils/_transform.py:        # TODO: there may be edge cases where the same normalized field name will transform to two different names
+./venv/lib/python3.12/site-packages/openai/_utils/_transform.py:        # TODO: there may be edge cases where the same normalized field name will transform to two different names
+./venv/lib/python3.12/site-packages/openai/_utils/_utils.py:    # TODO: this needs to take Dict but variance issues.....
+./venv/lib/python3.12/site-packages/openai/_utils/_utils.py:                    # TODO: this error message is not deterministic
+./venv/lib/python3.12/site-packages/openai/cli/_api/completions.py:    # TODO: add support for logit_bias
+./venv/lib/python3.12/site-packages/openai/cli/_api/audio.py:    # TODO: doesn't seem to be supported by the API
+./venv/lib/python3.12/site-packages/realtime/channel.py:        loop = asyncio.get_event_loop()  # TODO: replace with get_running_loop
+./venv/lib/python3.12/site-packages/realtime/channel.py:            print(str(e))  # TODO: better error propagation
+./venv/lib/python3.12/site-packages/realtime/connection.py:        loop = asyncio.get_event_loop()  # TODO: replace with get_running_loop
+./venv/lib/python3.12/site-packages/realtime/connection.py:        loop = asyncio.get_event_loop()  # TODO: replace with get_running

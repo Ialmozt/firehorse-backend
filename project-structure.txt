@@ -1,0 +1,183 @@
+.
+├── Dockerfile
+├── FINAL_PRODUCTION_REPORT.md
+├── SECURITY_IMPLEMENTATION_REPORT.md
+├── app
+│   ├── __init__.py
+│   ├── api.py
+│   ├── config.py
+│   ├── database.py
+│   ├── main.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   └── schemas.py
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── health.py
+│   │   └── webhook.py
+│   └── services
+│       ├── __init__.py
+│       ├── deepseek.py
+│       ├── kwork.py
+│       ├── kwork_parser.py
+│       ├── pgmq_rest_client.py
+│       ├── supabase_client.py
+│       └── supabase_client_v2.py
+├── backups
+│   ├── 20260104_210209
+│   │   ├── app
+│   │   └── db
+│   ├── 20260104_210826
+│   │   ├── app
+│   │   └── db
+│   ├── 20260104_211225
+│   │   ├── app
+│   │   └── db
+│   ├── 20260104_213725
+│   │   ├── app
+│   │   └── db
+│   ├── 20260104_213742
+│   │   ├── app
+│   │   └── db
+│   ├── 20260108_020001
+│   │   ├── app
+│   │   └── db
+│   ├── 20260109_020001
+│   │   ├── app
+│   │   └── db
+│   ├── backup_20260104_135409.log
+│   ├── backup_20260104_135537.log
+│   ├── backup_20260104_203621.log
+│   ├── backup_20260104_204018.log
+│   ├── backup_20260104_204209.log
+│   ├── backup_20260104_204414.log
+│   ├── backup_20260104_210209.log
+│   ├── backup_20260104_210826.log
+│   ├── backup_20260104_211225.log
+│   ├── backup_20260104_213725.log
+│   ├── backup_20260104_213742.log
+│   ├── backup_20260105_020001.log
+│   ├── backup_20260106_020001.log
+│   ├── backup_20260107_020001.log
+│   ├── backup_20260108_020001.log
+│   ├── backup_20260109_020001.log
+│   ├── backup_20260110_020001.log
+│   ├── checksums_20260104_210209.md5
+│   ├── checksums_20260104_210826.md5
+│   ├── checksums_20260104_211225.md5
+│   ├── checksums_20260104_213725.md5
+│   ├── checksums_20260104_213742.md5
+│   ├── checksums_20260108_020001.md5
+│   ├── checksums_20260109_020001.md5
+│   ├── cron.log
+│   ├── firehorse_20260104_210209.tar.gz.enc
+│   ├── firehorse_20260104_210826.tar.gz.enc
+│   ├── firehorse_20260104_211225.tar.gz.enc
+│   ├── firehorse_20260104_213725.tar.gz.enc
+│   ├── firehorse_20260104_213742.tar.gz.enc
+│   ├── firehorse_20260108_020001.tar.gz.enc
+│   └── firehorse_20260109_020001.tar.gz.enc
+├── deep_test.sh
+├── deepseek_bridge.py
+├── deploy_via_rest.py
+├── docker-compose.yml
+├── docs
+│   ├── 00-QUICKSTART.md
+│   ├── 01-DEPLOYMENT.md
+│   ├── 02-CLINE-AUTO.md
+│   ├── 03-CLINE-PROMPT.txt
+│   ├── DEPLOYMENT_GUIDE.md
+│   └── OPERATIONS_RUNBOOK.md
+├── firehorse-iteration3
+│   └── backend
+│       ├── Dockerfile
+│       ├── app
+│       ├── docker-compose.yml
+│       ├── main.py
+│       ├── requirements.txt
+│       └── worker.py
+├── frontend
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── grafana
+│   ├── dashboards
+│   │   └── firehorse-main.json
+│   └── datasources
+│       └── prometheus.yml
+├── performance_report_20260110_072734.txt
+├── phase1_verification_report.md
+├── project-structure.txt
+├── prometheus.yml
+├── requirements.txt
+├── schema.sql
+├── schema_final.sql
+├── schema_fixed.sql
+├── scripts
+│   ├── backup-manager.sh
+│   ├── backup-monitor.py
+│   ├── performance_optimization.py
+│   └── restore-procedure.sh
+├── src
+│   ├── core
+│   │   ├── error_handling.py
+│   │   ├── logging.py
+│   │   └── resilience.py
+│   ├── main.py
+│   ├── metrics.py
+│   ├── middleware
+│   │   ├── __init__.py
+│   │   ├── cors.py
+│   │   ├── logging_middleware.py
+│   │   ├── security.py
+│   │   └── tracing.py
+│   ├── models.py
+│   ├── monitoring
+│   │   ├── __init__.py
+│   │   ├── health.py
+│   │   ├── metrics.py
+│   │   └── tracing.py
+│   ├── monitoring_service.py
+│   ├── prompts
+│   │   └── __init__.py
+│   ├── services
+│   │   ├── deepseek_client.py
+│   │   └── deepseek_client_v2.py
+│   ├── show_dashboard_state.py
+│   ├── test_real_kwork_flow.py
+│   ├── worker.py
+│   ├── worker_optimized.py
+│   └── worker_rest.py
+├── test_advanced_prompts.py
+├── test_curl_kwork_webhook.sh
+├── test_deepseek_with_key.py
+├── test_error_handling.py
+├── test_kwork_webhook.py
+├── test_network_failure.py
+├── test_pgmq_worker.py
+├── test_resilience.py
+├── test_schema_validation.py
+├── test_security_middleware.py
+├── test_security_quick.py
+├── test_worker_optimization.py
+├── tests
+│   ├── test_monitoring.py
+│   ├── test_observability.py
+│   └── test_summary_report.md
+└── worker.log
+
+46 directories, 135 files

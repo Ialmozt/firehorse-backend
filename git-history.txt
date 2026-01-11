@@ -1,0 +1,17 @@
+169a807 | 2026-01-11 | feat: 20260111-security-verification-and-env-update
+2c88836 | 2026-01-11 | fix: restore deleted files from security-hardening rollback
+56b0182 | 2026-01-10 | docs: 20260110-security-implementation-report
+3d10867 | 2026-01-10 | feat: 20260110-security-hardening
+0afe6a4 | 2026-01-10 | fix: 20260110-webhook-prometheus-worker-disable
+89da179 | 2026-01-10 | feat: 20260110-production-ready
+1b6ede9 | 2026-01-10 | feat: 20260110-pgmq-worker
+12cceae | 2026-01-10 | feat: 20260110-kwork-webhook
+67b4ce7 | 2026-01-10 | feat: 20260110-security-hardening
+634b8b5 | 2026-01-10 | feat: 20260110-auto-git-automation
+0481f98 | 2026-01-10 | docs: update development state after iteration 2 complete
+6a72885 | 2026-01-09 | feat(observability): add prometheus+grafana monitoring with metrics endpoint, monitoring service, and comprehensive tests
+6410a9b | 2026-01-09 | ✅ ITERATION-1: Resilience integration complete - All core files verified, retry logic tested, artifacts updated
+02d6f6d | 2026-01-10 | feat: add context persistence system
+f923a1a | 2026-01-04 | Merge branch 'main' of https://github.com/Ialmozt/firehorse-backend
+ac2c298 | 2026-01-04 | feat: FastAPI backend v1.0 with Supabase integration
+064df97 | 2026-01-04 | Initial commit
