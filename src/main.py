@@ -71,13 +71,19 @@ async def get_metrics():
 # Supabase Configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+# Proxy Configuration
+USE_PROXY = os.getenv("USE_PROXY", "true").lower() == "true"
+PROXY_HOST = os.getenv("PROXY_HOST", "127.0.0.1")
+PROXY_PORT = os.getenv("PROXY_PORT", "7891")
+PROXY_TYPE = os.getenv("PROXY_TYPE", "socks5")
 
 # HTTP client for Supabase REST API
-# Use service key to bypass RLS policies
-supabase_key = SUPABASE_SERVICE_KEY
+# Use service role key to bypass RLS policies
+supabase_key = SUPABASE_SERVICE_ROLE_KEY
 if not supabase_key:
-    logger.warning("SUPABASE_SERVICE_KEY not set, using SUPABASE_ANON_KEY (may have RLS issues)")
+    logger.warning("SUPABASE_SERVICE_ROLE_KEY not set, using SUPABASE_ANON_KEY (may have RLS issues)")
     supabase_key = SUPABASE_ANON_KEY
 
 supabase_headers = {
@@ -91,13 +97,27 @@ supabase_headers = {
 if supabase_key and supabase_key.startswith('ey'):
     supabase_headers["Authorization"] = f"Bearer {supabase_key}"
 
+# Configure HTTP client with proxy if enabled
+def get_http_client():
+    """Get HTTP client with proxy configuration"""
+    if USE_PROXY:
+        proxy_url = f"{PROXY_TYPE}://{PROXY_HOST}:{PROXY_PORT}"
+        logger.info(f"🔗 Using {PROXY_TYPE} proxy: {proxy_url}")
+        return httpx.AsyncClient(
+            proxies=proxy_url,
+            timeout=30.0
+        )
+    else:
+        logger.info("🔗 Direct connection (no proxy)")
+        return httpx.AsyncClient(timeout=30.0)
+
 async def check_db_connection():
     """Check if Supabase is accessible"""
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
         return False
     
     try:
-        async with httpx.AsyncClient() as client:
+        async with get_http_client() as client:
             response = await client.get(
                 f"{SUPABASE_URL}/rest/v1/orders",
                 headers=supabase_headers,
@@ -149,7 +169,7 @@ async def insert_order(data: dict, request_id: str):
     kwork_id_str = data.get("id", "")
     kwork_order_id = extract_kwork_id(kwork_id_str)
     
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with get_http_client() as client:
         response = await client.post(
             f"{SUPABASE_URL}/rest/v1/orders",
             headers=supabase_headers,
@@ -183,16 +203,19 @@ async def insert_order(data: dict, request_id: str):
             
             return inserted_data[0]["id"] if rows_inserted > 0 else None
         else:
+            error_text = response.text[:500] if response.text else "No error message"
             logger.error(
                 "supabase_insert_failed",
                 extra={
                     "request_id": request_id,
                     "order_id": data.get("id", "unknown"),
                     "status_code": response.status_code,
-                    "error": response.text[:200] if response.text else "No error message",
+                    "error": error_text,
                     "duration_ms": round(insert_duration, 2)
                 }
             )
+            # Log full error for debugging
+            logger.error(f"Full Supabase error: {response.status_code} - {error_text}")
             return None
 
 # Pydantic Models

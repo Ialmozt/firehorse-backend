@@ -11,10 +11,14 @@ services:
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - INGRESS_SECRET=${INGRESS_SECRET}
+      - USE_PROXY=${USE_PROXY}
+      - PROXY_HOST=${PROXY_HOST}
+      - PROXY_PORT=${PROXY_PORT}
+      - PROXY_TYPE=${PROXY_TYPE}
     volumes:
       - ./:/app
     restart: unless-stopped
@@ -23,8 +27,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-      - firehorse-net
+    network_mode: host
 
   worker:
     build:
@@ -34,20 +37,18 @@ services:
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - DATABASE_HOST=${DATABASE_HOST}
-      - DATABASE_PORT=${DATABASE_PORT}
-      - DATABASE_NAME=${DATABASE_NAME}
-      - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - USE_PROXY=${USE_PROXY}
+      - PROXY_HOST=${PROXY_HOST}
+      - PROXY_PORT=${PROXY_PORT}
+      - PROXY_TYPE=${PROXY_TYPE}
     volumes:
       - ./:/app
     restart: unless-stopped
-    command: python -m src.worker
-    networks:
-      - firehorse-net
+    command: python -m src.worker_rest
+    network_mode: host
     depends_on:
       - api
 
