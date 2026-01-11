@@ -1,34 +1,31 @@
 """
-CORS middleware for Firehorse MVP.
-Configures CORS policies for frontend access.
+CORS middleware для Firehorse MVP.
+Настраивает CORS политики для фронтенда.
 """
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 import os
 
-def setup_cors(app: FastAPI) -> FastAPI:
+def setup_cors(app: FastAPI):
     """
-    Configure CORS middleware for the application.
+    Настройка CORS middleware для приложения.
     
-    Allows requests only from specified domains.
-    Defaults to allowing all domains for development.
-    
-    Returns:
-        FastAPI: The configured application
+    Разрешает запросы только с указанных доменов.
+    По умолчанию разрешает все домены для разработки.
     """
     
-    # Get allowed origins from environment variables
+    # Получаем список разрешенных доменов из переменных окружения
     allowed_origins_str = os.getenv("CORS_ALLOWED_ORIGINS", "*")
     
     if allowed_origins_str == "*":
-        # Allow all domains (for development)
+        # Разрешаем все домены (для разработки)
         allowed_origins = ["*"]
     else:
-        # Allow only specified domains
+        # Разрешаем только указанные домены
         allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",")]
     
-    # Configure CORS middleware with security best practices
+    # Настройка CORS middleware
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
@@ -44,8 +41,6 @@ def setup_cors(app: FastAPI) -> FastAPI:
             "User-Agent",
             "Cache-Control",
             "X-Requested-With",
-            "X-Forwarded-For",
-            "X-Real-IP",
         ],
         expose_headers=[
             "Content-Length",
@@ -53,12 +48,8 @@ def setup_cors(app: FastAPI) -> FastAPI:
             "X-RateLimit-Limit",
             "X-RateLimit-Remaining",
             "X-RateLimit-Reset",
-            "X-Content-Type-Options",
-            "X-Frame-Options",
-            "X-XSS-Protection",
-            "Strict-Transport-Security",
         ],
-        max_age=600,  # 10 minutes cache for preflight requests
+        max_age=600,  # 10 минут кэширования preflight запросов
     )
     
     return app

@@ -14,17 +14,14 @@ logger = get_logger(__name__)
 API_KEYS = os.getenv("API_KEYS", "").split(",") if os.getenv("API_KEYS") else []
 REQUIRE_API_KEY = os.getenv("REQUIRE_API_KEY", "false").lower() == "true"
 
-# Rate limiting configuration
-RATE_LIMIT_REQUESTS_PER_MINUTE = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "10"))
-
 class RateLimiter:
     """
     Advanced rate limiter using sliding window algorithm
-    Limit: configurable requests per minute per IP (default: 10)
+    Limit: 10 requests per minute per IP (как указано в задаче)
     """
     
-    def __init__(self, requests_per_minute: int = None):
-        self.requests_per_minute = requests_per_minute or RATE_LIMIT_REQUESTS_PER_MINUTE
+    def __init__(self, requests_per_minute: int = 10):
+        self.requests_per_minute = requests_per_minute
         self.requests: Dict[str, List[float]] = defaultdict(list)
         self.lock = defaultdict(lambda: False)
     
@@ -73,26 +70,10 @@ class RateLimiter:
         
         return max(0, self.requests_per_minute - len(requests_in_window))
 
-def get_client_ip(request: Request) -> str:
-    """Extract client IP from request, handling X-Forwarded-For header"""
-    # Check X-Forwarded-For header first (for proxy/load balancer)
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        # Take the first IP in the chain
-        client_ip = forwarded_for.split(",")[0].strip()
-        if client_ip:
-            return client_ip
-    
-    # Fall back to direct connection
-    if request.client and request.client.host:
-        return request.client.host
-    
-    return "unknown"
-
 class SecurityMiddleware(BaseHTTPMiddleware):
     """
     Security middleware to:
-    1. Rate limit by IP (configurable requests per minute)
+    1. Rate limit by IP (10 requests per minute)
     2. Add security headers
     3. Validate API keys (header X-API-Key)
     4. Log security events
@@ -100,11 +81,11 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     
     def __init__(self, app, rate_limiter: RateLimiter = None):
         super().__init__(app)
-        self.rate_limiter = rate_limiter or RateLimiter()
+        self.rate_limiter = rate_limiter or RateLimiter(requests_per_minute=10)
     
     async def dispatch(self, request: Request, call_next) -> Response:
         request_id = get_request_id()
-        client_ip = get_client_ip(request)
+        client_ip = request.client.host if request.client else "unknown"
         
         # Skip API key validation for health and metrics endpoints
         skip_api_key_paths = ["/health", "/metrics", "/docs", "/openapi.json", "/redoc"]
