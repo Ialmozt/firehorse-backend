@@ -1,8 +1,8 @@
 # 📊 FIREHORSE MVP - DEVELOPMENT STATUS
 **Дата:** 2026-01-11  
-**Время:** 02:01 UTC  
+**Время:** 04:16 UTC  
 **Ветка:** main  
-**Последний коммит:** 169a807 - "feat: 20260111-security-verification-and-env-update"
+**Последний коммит:** 000b3fe - "feat: 20260111-consolidate-codebase"
 
 ***
 
@@ -113,6 +113,8 @@
 
 ### История (последние 20 коммитов)
 ```
+000b3fe | 2026-01-11 | feat: 20260111-consolidate-codebase
+d2e7ac9 | 2026-01-11 | feat: 20260111-development-status-report
 169a807 | 2026-01-11 | feat: 20260111-security-verification-and-env-update
 2c88836 | 2026-01-11 | fix: restore deleted files from security-hardening rollback
 56b0182 | 2026-01-10 | docs: 20260110-security-implementation-report
@@ -154,6 +156,7 @@ ac2c298 | 2026-01-04 | feat: FastAPI backend v1.0 with Supabase integration
 - `src/models.py` - Pydantic модели для валидации данных
 - `src/metrics.py` - Prometheus метрики
 - `src/monitoring_service.py` - Сервис мониторинга
+- `src/prompts/__init__.py` - Продвинутые шаблоны промптов для DeepSeek API с поддержкой различных типов задач (SEO статьи, перевод, генерация кода) и метриками производительности
 - `src/services/deepseek_client.py` - Клиент для DeepSeek API
 - `src/services/deepseek_client_v2.py` - Улучшенный клиент DeepSeek API
 
@@ -317,7 +320,7 @@ API_KEYS=test-api-key-123,production-api-key-456
 ### Критические TODO (из кода проекта)
 1. `./app/api.py:    # TODO: Save to DB + Queue (Итерация 3)` - Сохранение в БД и очередь
 2. `./src/main.py:    # TODO: Implement proper signature verification` - Реализация верификации подписи webhook
-3. `./src/prompts/__init__.py:- Add TODO comments for potential improvements` - Комментарии для улучшений промптов
+3. `./src/prompts/__init__.py:    # TODO: Add more prompt templates for different task types` - Добавление шаблонов промптов для других типов задач
 
 ### Security TODO
 1. Реализовать верификацию подписи webhook
@@ -329,19 +332,6 @@ API_KEYS=test-api-key-123,production-api-key-456
 2. Реализовать кэширование для часто запрашиваемых данных
 3. Настроить connection pooling для базы данных
 
-## 9️⃣ NEXT STEPS
-
-### Приоритет 1: Production Deployment
-1. **Настроить CORS для production** - Заменить `*` на конкретные домены фронтенда
-2. **Включить API key validation** - Установить `REQUIRE_API_KEY=true` в production
-3. **Настроить мониторинг алертов** - Создать алерты для rate limiting и ошибок
-4. **Реализовать верификацию подписи webhook** - Защита от поддельных запросов
-
-### Приоритет 2: Performance Optimization
-1. **Оптимизировать worker обработку** - Улучшить параллельную обработку заданий
-2. **Настроить кэширование** - Redis для кэширования часто используемых данных
-3. **Реализовать connection pooling** - Для Supabase и DeepSeek API
-
-### Приоритет 3: Feature Development
-1. **Добавить административную панель** - Для мониторинга заказов и управления
-2. **Реализовать уведомления** - Email
+### Feature TODO
+1. Расширить систему промптов: добавить шаблоны для социальных сетей, копирайтинга, анализа
+2. Реализовать A/B тестирование различных версий
