@@ -3,7 +3,7 @@ Firehorse MVP - FastAPI Backend
 Handles webhook ingress and order processing via Supabase REST API
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from pydantic import BaseModel
 import httpx
 import os
@@ -11,6 +11,7 @@ from datetime import datetime
 import logging
 import json
 import time
+import uuid
 from src.core.resilience import retry_with_backoff, supabase_retry_config
 from src.core.logging import setup_logging, get_logger, get_request_id
 from src.middleware import TracingMiddleware, LoggingMiddleware, SecurityMiddleware, RateLimiter, setup_cors
@@ -218,6 +219,36 @@ async def insert_order(data: dict, request_id: str):
             logger.error(f"Full Supabase error: {response.status_code} - {error_text}")
             return None
 
+# Standard response wrapper functions
+def success_response(data: any, meta: dict = None):
+    return {
+        "success": True,
+        "data": data,
+        "error": None,
+        "meta": {
+            "timestamp": datetime.utcnow().isoformat(),
+            "version": "1.0",
+            "trace_id": str(uuid.uuid4()),
+            **(meta or {}),
+        },
+    }
+
+def error_response(code: str, message: str, status_code: int = 400, details: dict = None):
+    return {
+        "success": False,
+        "data": None,
+        "error": {
+            "code": code,
+            "message": message,
+            "details": details,
+        },
+        "meta": {
+            "timestamp": datetime.utcnow().isoformat(),
+            "version": "1.0",
+            "trace_id": str(uuid.uuid4()),
+        },
+    }
+
 # Pydantic Models
 class HealthResponse(BaseModel):
     status: str
@@ -225,6 +256,183 @@ class HealthResponse(BaseModel):
     version: str
     timestamp: str
 
+# API Endpoints with /api prefix
+@app.get("/api/health")
+async def api_health_check():
+    """Check API health with standardized response format"""
+    request_id = get_request_id()
+    
+    try:
+        # Try to connect to database
+        try:
+            if await check_db_connection():
+                db_status = "connected"
+                db_version = "Supabase REST API"
+            else:
+                db_status = "disconnected"
+                db_version = "unknown"
+        except Exception as db_error:
+            logger.warning(
+                "database_connection_warning",
+                extra={
+                    "request_id": request_id,
+                    "error": str(db_error)
+                }
+            )
+            db_status = "disconnected"
+            db_version = "unknown"
+        
+        # Increment request metrics
+        metrics_module.http_requests_total.labels(
+            method="GET",
+            endpoint="/api/health",
+            status_code="200"
+        ).inc()
+        
+        return success_response({
+            "status": "healthy",
+            "database": db_status,
+            "version": db_version,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+    except Exception as e:
+        metrics_module.http_request_errors_total.labels(
+            method="GET",
+            endpoint="/api/health",
+            error_type=type(e).__name__
+        ).inc()
+        
+        logger.error(
+            "health_check_failed",
+            extra={
+                "request_id": request_id,
+                "error": str(e)
+            },
+            exc_info=True
+        )
+        return error_response("INTERNAL_SERVER_ERROR", "Health check failed", 500)
+
+@app.get("/api/orders")
+async def list_orders(page: int = 1, limit: int = 20, status: str = None):
+    """List orders with pagination"""
+    try:
+        # TODO: Fetch from Supabase with pagination
+        orders = []
+        return success_response({
+            "orders": orders,
+            "pagination": {"page": page, "limit": limit, "total": 0},
+        })
+    except Exception as e:
+        logger.error(f"Failed to list orders: {e}")
+        return error_response("FETCH_ERROR", str(e), 500)
+
+@app.post("/api/orders")
+async def create_order(order_data: dict):
+    """Create new order"""
+    try:
+        # TODO: Save to Supabase + Queue
+        return success_response({
+            "id": str(uuid.uuid4()),
+            "title": order_data.get("title", "Untitled"),
+            "status": "queued",
+            "created_at": datetime.utcnow().isoformat()
+        }, {"status_code": 201})
+    except Exception as e:
+        logger.error(f"Failed to create order: {e}")
+        return error_response("CREATE_ERROR", str(e), 400)
+
+@app.get("/api/orders/{order_id}")
+async def get_order(order_id: str):
+    """Get single order by ID"""
+    try:
+        # TODO: Fetch from Supabase
+        return success_response({
+            "id": order_id,
+            "title": "Sample Order",
+            "status": "pending",
+            "price": 100.0,
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Failed to get order {order_id}: {e}")
+        return error_response("NOT_FOUND", "Order not found", 404)
+
+@app.put("/api/orders/{order_id}")
+async def update_order(order_id: str, update_data: dict):
+    """Update order"""
+    try:
+        # TODO: Update in Supabase
+        return success_response({
+            "id": order_id,
+            "status": update_data.get("status", "pending"),
+            "updated_at": datetime.utcnow().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Failed to update order {order_id}: {e}")
+        return error_response("UPDATE_ERROR", str(e), 400)
+
+@app.delete("/api/orders/{order_id}")
+async def delete_order(order_id: str):
+    """Delete order"""
+    try:
+        # TODO: Delete from Supabase
+        return success_response({
+            "deleted": True,
+            "id": order_id
+        })
+    except Exception as e:
+        logger.error(f"Failed to delete order {order_id}: {e}")
+        return error_response("DELETE_ERROR", str(e), 400)
+
+@app.get("/api/orders/{order_id}/events")
+async def get_order_events(order_id: str):
+    """Get order timeline events"""
+    try:
+        # TODO: Fetch from Supabase order_events table
+        events = []
+        return success_response({
+            "order_id": order_id,
+            "events": events
+        })
+    except Exception as e:
+        logger.error(f"Failed to get events for order {order_id}: {e}")
+        return error_response("EVENTS_ERROR", str(e), 500)
+
+@app.get("/api/dashboard")
+async def get_dashboard_stats():
+    """Get dashboard statistics"""
+    try:
+        # TODO: Calculate from Supabase
+        return success_response({
+            "total_orders": 0,
+            "pending_orders": 0,
+            "completed_orders": 0,
+            "total_revenue": 0.0,
+            "recent_orders": [],
+            "daily_trends": {}
+        })
+    except Exception as e:
+        logger.error(f"Failed to get dashboard stats: {e}")
+        return error_response("STATS_ERROR", str(e), 500)
+
+@app.get("/api/metrics")
+async def api_get_metrics():
+    """Prometheus metrics endpoint"""
+    try:
+        return Response(
+            content=metrics_module.get_metrics_text(),
+            media_type=metrics_module.get_metrics_content_type(),
+            status_code=200,
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate metrics: {e}")
+        return Response(
+            content="Failed to generate metrics",
+            status_code=500
+        )
+
+# Legacy endpoints (keep for backward compatibility)
 # Endpoints
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
