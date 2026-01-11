@@ -47,7 +47,7 @@ services:
     volumes:
       - ./:/app
     restart: unless-stopped
-    command: python -m src.worker_rest
+    command: python -m src.worker
     network_mode: host
     depends_on:
       - api

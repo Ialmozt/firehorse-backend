@@ -1,367 +1,742 @@
 """
-PGMQ Worker for Firehorse - processes jobs from queue_orders.
+Optimized PGMQ worker for Firehorse with advanced features:
+- Dynamic batch processing
+- Adaptive polling intervals
+- Concurrency control
+- Graceful shutdown
+- Health monitoring
+- Dead-letter queue routing
 """
+
 import asyncio
 import logging
+import signal
 import time
-from typing import Dict, Any, Optional
-import asyncpg
-from app.config import settings
-from app.services.supabase_client import SupabaseClient
-from src.services.deepseek_client import DeepSeekClient
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
+from dataclasses import dataclass
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+from src.core.error_handling import (
+    resilient_api_call, resilient_database_call,
+    GracefulDegradation, error_metrics
 )
+from src.services.deepseek_client import AdvancedDeepSeekClient
+from src.services.supabase_client import SupabaseClient
+from src.core.logging import setup_logging
+
 logger = logging.getLogger(__name__)
 
 
-class PGMQWorker:
-    """Worker that polls PGMQ queue and processes jobs"""
+@dataclass
+class WorkerConfig:
+    """Configuration for optimized worker"""
+    # Polling configuration
+    min_poll_interval: float = 5.0  # seconds
+    max_poll_interval: float = 60.0  # seconds
+    adaptive_polling: bool = True
+    
+    # Batch processing
+    min_batch_size: int = 1
+    max_batch_size: int = 10
+    batch_timeout: float = 30.0  # seconds
+    
+    # Concurrency control
+    max_concurrent_tasks: int = 4
+    max_concurrent_deepseek: int = 2
+    
+    # Job processing
+    visibility_timeout: int = 300  # 5 minutes
+    max_attempts: int = 3
+    dead_letter_threshold: int = 3
+    
+    # Health monitoring
+    health_check_interval: float = 30.0  # seconds
+    max_queue_depth_threshold: int = 100
+    
+    # Graceful shutdown
+    shutdown_timeout: float = 30.0  # seconds
+
+
+class AdaptivePollingManager:
+    """Manage adaptive polling intervals based on queue depth"""
+    
+    def __init__(self, config: WorkerConfig):
+        self.config = config
+        self.current_interval = config.min_poll_interval
+        self.queue_depth_history: List[int] = []
+        self.max_history_size = 10
+        
+    def update_interval(self, queue_depth: int) -> float:
+        """Update polling interval based on queue depth"""
+        if not self.config.adaptive_polling:
+            return self.config.min_poll_interval
+        
+        # Store queue depth
+        self.queue_depth_history.append(queue_depth)
+        if len(self.queue_depth_history) > self.max_history_size:
+            self.queue_depth_history.pop(0)
+        
+        # Calculate average queue depth
+        if not self.queue_depth_history:
+            avg_depth = 0
+        else:
+            avg_depth = sum(self.queue_depth_history) / len(self.queue_depth_history)
+        
+        # Adjust interval based on queue depth
+        if avg_depth == 0:
+            # No jobs, use max interval
+            self.current_interval = self.config.max_poll_interval
+        elif avg_depth >= self.config.max_queue_depth_threshold:
+            # High load, use min interval
+            self.current_interval = self.config.min_poll_interval
+        else:
+            # Scale interval based on load
+            load_factor = avg_depth / self.config.max_queue_depth_threshold
+            interval_range = self.config.max_poll_interval - self.config.min_poll_interval
+            self.current_interval = self.config.max_poll_interval - (interval_range * load_factor)
+        
+        # Ensure within bounds
+        self.current_interval = max(
+            self.config.min_poll_interval,
+            min(self.config.max_poll_interval, self.current_interval)
+        )
+        
+        return self.current_interval
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get polling statistics"""
+        return {
+            "current_interval": self.current_interval,
+            "queue_depth_history": self.queue_depth_history.copy(),
+            "avg_queue_depth": sum(self.queue_depth_history) / len(self.queue_depth_history) if self.queue_depth_history else 0,
+        }
+
+
+class BatchProcessor:
+    """Process jobs in batches for efficiency"""
+    
+    def __init__(self, config: WorkerConfig):
+        self.config = config
+        self.semaphore = asyncio.Semaphore(config.max_concurrent_tasks)
+        self.deepseek_semaphore = asyncio.Semaphore(config.max_concurrent_deepseek)
+        
+    async def process_batch(
+        self,
+        jobs: List[Dict[str, Any]],
+        process_func,
+        *args,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """Process a batch of jobs concurrently"""
+        if not jobs:
+            return []
+        
+        # Process jobs concurrently with semaphore
+        tasks = []
+        for job in jobs:
+            task = self._process_job_with_semaphore(
+                job, process_func, *args, **kwargs
+            )
+            tasks.append(task)
+        
+        # Wait for all tasks with timeout
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout=self.config.batch_timeout
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"Batch processing timeout after {self.config.batch_timeout}s")
+            # Cancel remaining tasks
+            for task in tasks:
+                task.cancel()
+            results = []
+        
+        # Process results
+        processed_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.error(f"Job {i} failed: {result}")
+                # Mark job as failed
+                job_result = {
+                    "job": jobs[i],
+                    "success": False,
+                    "error": str(result),
+                    "exception": result
+                }
+            else:
+                job_result = {
+                    "job": jobs[i],
+                    "success": True,
+                    "result": result
+                }
+            processed_results.append(job_result)
+        
+        return processed_results
+    
+    async def _process_job_with_semaphore(
+        self,
+        job: Dict[str, Any],
+        process_func,
+        *args,
+        **kwargs
+    ) -> Any:
+        """Process single job with semaphore control"""
+        async with self.semaphore:
+            return await process_func(job, *args, **kwargs)
+    
+    async def process_with_deepseek_limit(
+        self,
+        job: Dict[str, Any],
+        process_func,
+        *args,
+        **kwargs
+    ) -> Any:
+        """Process job with DeepSeek concurrency limit"""
+        async with self.deepseek_semaphore:
+            return await process_func(job, *args, **kwargs)
+
+
+class HealthMonitor:
+    """Monitor worker health and performance"""
     
     def __init__(self):
-        self.supabase = SupabaseClient()
-        self.deepseek = DeepSeekClient()
-        self.db_pool: Optional[asyncpg.Pool] = None
-        self.running = False
+        self.start_time = datetime.now()
+        self.metrics = {
+            "jobs_processed": 0,
+            "jobs_failed": 0,
+            "jobs_succeeded": 0,
+            "avg_processing_time": 0.0,
+            "last_health_check": None,
+            "concurrent_tasks": 0,
+            "queue_depth": 0,
+            "deepseek_api_calls": 0,
+            "deepseek_api_errors": 0,
+        }
+        self.processing_times: List[float] = []
+        self.max_processing_times = 100
         
-        # Configuration
-        self.poll_interval = 5  # seconds between polls
-        self.max_retries = 3
-        self.visibility_timeout = 300  # 5 minutes
+    def record_job_start(self):
+        """Record job start"""
+        self.metrics["concurrent_tasks"] += 1
+    
+    def record_job_completion(self, success: bool, processing_time: float):
+        """Record job completion"""
+        self.metrics["concurrent_tasks"] -= 1
+        self.metrics["jobs_processed"] += 1
         
-    async def connect_to_database(self) -> bool:
-        """Connect to PostgreSQL database"""
+        if success:
+            self.metrics["jobs_succeeded"] += 1
+        else:
+            self.metrics["jobs_failed"] += 1
+        
+        # Update average processing time
+        self.processing_times.append(processing_time)
+        if len(self.processing_times) > self.max_processing_times:
+            self.processing_times.pop(0)
+        
+        if self.processing_times:
+            self.metrics["avg_processing_time"] = sum(self.processing_times) / len(self.processing_times)
+    
+    def record_deepseek_call(self, success: bool):
+        """Record DeepSeek API call"""
+        self.metrics["deepseek_api_calls"] += 1
+        if not success:
+            self.metrics["deepseek_api_errors"] += 1
+    
+    def update_queue_depth(self, depth: int):
+        """Update queue depth"""
+        self.metrics["queue_depth"] = depth
+    
+    def health_check(self) -> Dict[str, Any]:
+        """Perform health check"""
+        self.metrics["last_health_check"] = datetime.now().isoformat()
+        
+        uptime = (datetime.now() - self.start_time).total_seconds()
+        success_rate = 0.0
+        if self.metrics["jobs_processed"] > 0:
+            success_rate = self.metrics["jobs_succeeded"] / self.metrics["jobs_processed"]
+        
+        deepseek_error_rate = 0.0
+        if self.metrics["deepseek_api_calls"] > 0:
+            deepseek_error_rate = self.metrics["deepseek_api_errors"] / self.metrics["deepseek_api_calls"]
+        
+        health_status = {
+            "status": "healthy",
+            "uptime_seconds": uptime,
+            "jobs_processed": self.metrics["jobs_processed"],
+            "success_rate": success_rate,
+            "avg_processing_time": self.metrics["avg_processing_time"],
+            "concurrent_tasks": self.metrics["concurrent_tasks"],
+            "queue_depth": self.metrics["queue_depth"],
+            "deepseek_api_calls": self.metrics["deepseek_api_calls"],
+            "deepseek_error_rate": deepseek_error_rate,
+            "timestamp": datetime.now().isoformat(),
+        }
+        
+        # Check for issues
+        if success_rate < 0.8:
+            health_status["status"] = "degraded"
+            health_status["issue"] = "Low success rate"
+        elif deepseek_error_rate > 0.2:
+            health_status["status"] = "degraded"
+            health_status["issue"] = "High DeepSeek error rate"
+        elif self.metrics["concurrent_tasks"] > 10:
+            health_status["status"] = "degraded"
+            health_status["issue"] = "High concurrency"
+        
+        return health_status
+
+
+class OptimizedWorker:
+    """Optimized PGMQ worker with advanced features"""
+    
+    def __init__(
+        self,
+        supabase_client: SupabaseClient,
+        deepseek_client: AdvancedDeepSeekClient,
+        config: Optional[WorkerConfig] = None
+    ):
+        self.supabase = supabase_client
+        self.deepseek = deepseek_client
+        self.config = config or WorkerConfig()
+        
+        # Initialize components
+        self.polling_manager = AdaptivePollingManager(self.config)
+        self.batch_processor = BatchProcessor(self.config)
+        self.health_monitor = HealthMonitor()
+        
+        # Worker state
+        self.is_running = False
+        self.shutdown_requested = False
+        self.current_tasks: List[asyncio.Task] = []
+        
+        # Setup logging
+        setup_logging()
+        
+        # Setup signal handlers
+        self._setup_signal_handlers()
+    
+    def _setup_signal_handlers(self):
+        """Setup signal handlers for graceful shutdown"""
         try:
-            # Build connection string from environment
-            conn_info = {
-                "host": settings.DATABASE_HOST or "db.yommcknuizxkwpmpvlmp.supabase.co",
-                "port": settings.DATABASE_PORT or "5432",
-                "database": settings.DATABASE_NAME or "postgres",
-                "user": settings.DATABASE_USER or "postgres",
-                "password": settings.DATABASE_PASSWORD or "bkOFQ9jiln6JE82v",
-            }
+            loop = asyncio.get_event_loop()
+            for sig in (signal.SIGTERM, signal.SIGINT):
+                loop.add_signal_handler(sig, self.request_shutdown)
+        except (NotImplementedError, RuntimeError):
+            # Signal handlers not supported in this environment
+            pass
+    
+    def request_shutdown(self):
+        """Request graceful shutdown"""
+        logger.info("Shutdown requested")
+        self.shutdown_requested = True
+    
+    async def _wait_for_shutdown(self):
+        """Wait for graceful shutdown"""
+        if not self.shutdown_requested:
+            return
+        
+        logger.info("Starting graceful shutdown...")
+        
+        # Wait for current tasks to complete
+        start_time = time.time()
+        while self.current_tasks and time.time() - start_time < self.config.shutdown_timeout:
+            logger.info(f"Waiting for {len(self.current_tasks)} tasks to complete...")
+            await asyncio.sleep(1)
+        
+        # Cancel remaining tasks if timeout reached
+        if self.current_tasks:
+            logger.warning(f"Cancelling {len(self.current_tasks)} remaining tasks")
+            for task in self.current_tasks:
+                task.cancel()
             
-            # Create connection pool
-            self.db_pool = await asyncpg.create_pool(
-                host=conn_info["host"],
-                port=conn_info["port"],
-                database=conn_info["database"],
-                user=conn_info["user"],
-                password=conn_info["password"],
-                min_size=1,
-                max_size=5
+            # Wait for cancellation
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*self.current_tasks, return_exceptions=True),
+                    timeout=5.0
+                )
+            except asyncio.TimeoutError:
+                logger.error("Timeout waiting for task cancellation")
+        
+        self.is_running = False
+        logger.info("Shutdown complete")
+    
+    async def get_queue_depth(self) -> int:
+        """Get current queue depth"""
+        try:
+            # This is a simplified version - in production, you'd query PGMQ
+            result = await resilient_database_call(
+                self.supabase.get_queue_depth
             )
-            
-            logger.info("✅ Connected to PostgreSQL database")
-            return True
-            
+            return result or 0
         except Exception as e:
-            logger.error(f"❌ Database connection failed: {str(e)}")
-            return False
+            logger.error(f"Failed to get queue depth: {e}")
+            return 0
     
-    async def poll_job_queue(self) -> Optional[Dict[str, Any]]:
-        """
-        Poll job_queue for next available job.
-        
-        Returns:
-            Job data if available, None otherwise
-        """
-        if not self.db_pool:
-            logger.error("❌ Database not connected")
-            return None
+    async def fetch_jobs(self, batch_size: int) -> List[Dict[str, Any]]:
+        """Fetch jobs from queue"""
+        try:
+            jobs = await resilient_database_call(
+                self.supabase.read_jobs,
+                batch_size,
+                self.config.visibility_timeout
+            )
+            return jobs or []
+        except Exception as e:
+            logger.error(f"Failed to fetch jobs: {e}")
+            return []
+    
+    async def process_job(self, job: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a single job"""
+        start_time = time.time()
+        self.health_monitor.record_job_start()
         
         try:
-            async with self.db_pool.acquire() as conn:
-                # Use PGMQ's read function with visibility timeout
-                query = """
-                SELECT * FROM pgmq.read(
-                    'job_queue',
-                    1,  -- number of messages
-                    $1   -- visibility timeout in seconds
-                );
-                """
-                
-                result = await conn.fetch(query, self.visibility_timeout)
-                
-                if result and len(result) > 0:
-                    job = dict(result[0])
-                    logger.info(f"📥 Received job: {job.get('msg_id')}")
-                    return job
-                
-                return None
-                
-        except Exception as e:
-            logger.error(f"❌ Error polling job queue: {str(e)}")
-            return None
-    
-    async def process_job(self, job: Dict[str, Any]) -> bool:
-        """
-        Process a single job from the queue.
-        
-        Args:
-            job: Job data from PGMQ
+            logger.info(f"Processing job: {job.get('id', 'unknown')}")
             
-        Returns:
-            True if successful, False otherwise
-        """
-        job_id = job.get("msg_id")
-        message = job.get("message", {})
-        
-        try:
-            logger.info(f"🔧 Processing job {job_id}")
-            
-            # Extract order information
-            order_id = message.get("order_id")
-            source_id = message.get("source_id")
-            topic = message.get("topic", "general")
+            # Extract job data
+            order_id = job.get("order_id")
+            content_type = job.get("content_type", "seo_article")
+            prompt_version = job.get("prompt_version", "v1")
+            temperature = job.get("temperature", 0.7)
+            max_tokens = job.get("max_tokens", 2000)
             
             if not order_id:
-                logger.error(f"❌ Job {job_id} missing order_id")
-                await self.move_to_dlq(job_id, "Missing order_id")
-                return False
+                raise ValueError("Job missing order_id")
             
-            # Get order details from Supabase
-            order = await self.get_order_details(order_id)
-            if not order:
-                logger.error(f"❌ Order {order_id} not found")
-                await self.move_to_dlq(job_id, f"Order {order_id} not found")
-                return False
-            
-            # Update order status to processing
-            await self.supabase.update_order_status(order_id, "processing")
-            await self.supabase.create_order_event(
-                order_id, "worker_started", "INFO", f"Worker started processing job {job_id}"
+            # Get order details
+            order = await resilient_database_call(
+                self.supabase.get_order,
+                order_id
             )
             
-            # Generate content with DeepSeek
-            prompt = self.build_prompt(order)
-            logger.info(f"🤖 Generating content for order {order_id}, topic: {topic}")
-            
-            result = await self.deepseek.generate_content(prompt, topic)
-            
-            if result["success"]:
-                # Update order with generated content
-                await self.supabase.update_order_with_content(
-                    order_id,
-                    result["content"],
-                    result.get("usage", {})
-                )
-                
-                # Create success event
-                await self.supabase.create_order_event(
-                    order_id, "content_generated", "INFO",
-                    f"Content generated successfully ({len(result['content'])} chars)",
-                    {"model": result.get("model"), "usage": result.get("usage")}
-                )
-                
-                logger.info(f"✅ Job {job_id} completed successfully")
-                await self.acknowledge_job(job_id)
-                return True
-            else:
-                # Handle failure
-                error_msg = result.get("error", "Unknown error")
-                logger.error(f"❌ DeepSeek failed for job {job_id}: {error_msg}")
-                
-                # Update order with error
-                await self.supabase.update_order_status(
-                    order_id, "failed", error_msg
-                )
-                
-                # Create error event
-                await self.supabase.create_order_event(
-                    order_id, "content_generation_failed", "ERROR",
-                    f"DeepSeek API error: {error_msg}"
-                )
-                
-                # Move to DLQ after max retries
-                attempts = order.get("attempts", 0) + 1
-                if attempts >= self.max_retries:
-                    await self.move_to_dlq(job_id, f"Max retries exceeded: {error_msg}")
-                else:
-                    await self.reject_job(job_id)
-                
-                return False
-                
-        except Exception as e:
-            logger.error(f"❌ Error processing job {job_id}: {str(e)}", exc_info=True)
-            
-            # Try to update order status
-            try:
-                if 'order_id' in locals():
-                    await self.supabase.update_order_status(
-                        order_id, "failed", f"Worker error: {str(e)}"
-                    )
-            except:
-                pass
-            
-            await self.move_to_dlq(job_id, f"Worker exception: {str(e)}")
-            return False
-    
-    async def get_order_details(self, order_id: str) -> Optional[Dict[str, Any]]:
-        """Get order details from Supabase"""
-        try:
-            # Use existing Supabase client method
-            order = self.supabase.get_order_by_source_id(f"kwork_{order_id}")
             if not order:
-                # Try direct UUID lookup
-                order = self.supabase.get_order_by_source_id(order_id)
-            return order
+                raise ValueError(f"Order not found: {order_id}")
+            
+            # Generate content using DeepSeek with resilience
+            prompt = self._create_prompt(order, content_type, prompt_version)
+            
+            generated_content = await self.batch_processor.process_with_deepseek_limit(
+                job,
+                self._generate_content_with_fallback,
+                prompt, content_type, temperature, max_tokens
+            )
+            
+            # Update order with generated content
+            await resilient_database_call(
+                self.supabase.update_order_content,
+                order_id,
+                generated_content,
+                "completed"
+            )
+            
+            # Record success
+            processing_time = time.time() - start_time
+            self.health_monitor.record_job_completion(True, processing_time)
+            self.health_monitor.record_deepseek_call(True)
+            
+            return {
+                "success": True,
+                "order_id": order_id,
+                "processing_time": processing_time,
+                "content_length": len(generated_content) if generated_content else 0,
+            }
+            
         except Exception as e:
-            logger.error(f"❌ Error getting order details: {str(e)}")
-            return None
+            # Record failure
+            processing_time = time.time() - start_time
+            self.health_monitor.record_job_completion(False, processing_time)
+            self.health_monitor.record_deepseek_call(False)
+            
+            logger.error(f"Job processing failed: {e}")
+            
+            # Move to dead-letter queue if max attempts reached
+            attempts = job.get("attempts", 0) + 1
+            if attempts >= self.config.dead_letter_threshold:
+                await self._move_to_dead_letter(job, str(e))
+            else:
+                # Retry job
+                await self._retry_job(job, attempts, str(e))
+            
+            return {
+                "success": False,
+                "order_id": job.get("order_id"),
+                "error": str(e),
+                "processing_time": processing_time,
+                "attempts": attempts,
+            }
     
-    def build_prompt(self, order: Dict[str, Any]) -> str:
-        """Build prompt for DeepSeek from order data"""
+    async def _generate_content_with_fallback(
+        self,
+        job: Dict[str, Any],
+        prompt: str,
+        content_type: str,
+        temperature: float,
+        max_tokens: int
+    ) -> str:
+        """Generate content with fallback strategy"""
+        
+        async def primary_generation():
+            """Primary content generation using DeepSeek"""
+            return await resilient_api_call(
+                self.deepseek.generate_content,
+                "deepseek_api",
+                prompt,
+                content_type,
+                temperature,
+                max_tokens
+            )
+        
+        async def fallback_generation():
+            """Fallback content generation (simplified)"""
+            logger.warning("Using fallback content generation")
+            # In production, this could use a different AI model or cached responses
+            return f"Fallback content for {content_type}. Prompt: {prompt[:100]}..."
+        
+        # Use graceful degradation with fallback
+        return await GracefulDegradation.with_fallback(
+            primary_generation,
+            fallback_generation,
+            lambda e: "timeout" in str(e).lower() or "connection" in str(e).lower()
+        )
+    
+    def _create_prompt(
+        self,
+        order: Dict[str, Any],
+        content_type: str,
+        prompt_version: str
+    ) -> str:
+        """Create prompt for content generation"""
+        # This would use the advanced prompt engineering system
+        # For now, create a simple prompt
         title = order.get("title", "")
         description = order.get("description", "")
-        metrics = order.get("metrics", {})
         
-        # Extract additional info from metrics
-        kwork_title = metrics.get("title", "")
-        kwork_description = metrics.get("description", "")
+        prompt_templates = {
+            "seo_article": f"Write a SEO-optimized article about: {title}. Description: {description}",
+            "translation": f"Translate to Russian: {title}. {description}",
+            "content_creation": f"Create engaging content about: {title}. Details: {description}",
+            "code_generation": f"Generate code for: {title}. Requirements: {description}",
+        }
         
-        # Build comprehensive prompt
-        prompt_parts = []
-        
-        if title:
-            prompt_parts.append(f"Title: {title}")
-        elif kwork_title:
-            prompt_parts.append(f"Original Title: {kwork_title}")
-        
-        if description:
-            prompt_parts.append(f"Description: {description}")
-        elif kwork_description:
-            prompt_parts.append(f"Original Description: {kwork_description}")
-        
-        # Add topic context
-        topic = order.get("topic", "general")
-        prompt_parts.append(f"Content Type: {topic}")
-        
-        return "\n\n".join(prompt_parts)
+        return prompt_templates.get(content_type, f"Create content: {title}. {description}")
     
-    async def acknowledge_job(self, job_id: int) -> bool:
-        """Acknowledge (delete) job from queue after successful processing"""
-        if not self.db_pool:
-            return False
-        
+    async def _move_to_dead_letter(self, job: Dict[str, Any], error: str):
+        """Move job to dead-letter queue"""
         try:
-            async with self.db_pool.acquire() as conn:
-                query = "SELECT * FROM pgmq.delete('job_queue', $1);"
-                await conn.execute(query, job_id)
-                logger.debug(f"✅ Acknowledged job {job_id}")
-                return True
+            job_id = job.get("id")
+            order_id = job.get("order_id")
+            
+            logger.warning(f"Moving job {job_id} to dead-letter queue: {error}")
+            
+            # In production, you'd move to PGMQ dead-letter queue
+            # For now, just log and update status
+            await resilient_database_call(
+                self.supabase.update_order_status,
+                order_id,
+                "failed",
+                f"Moved to DLQ: {error}"
+            )
+            
+            # Record error metrics
+            error_metrics.record_error(
+                Exception(f"Job moved to DLQ: {error}"),
+                "worker"
+            )
+            
         except Exception as e:
-            logger.error(f"❌ Error acknowledging job {job_id}: {str(e)}")
-            return False
+            logger.error(f"Failed to move job to dead-letter queue: {e}")
     
-    async def reject_job(self, job_id: int) -> bool:
-        """Reject job (make it visible again) for retry"""
-        if not self.db_pool:
-            return False
-        
+    async def _retry_job(self, job: Dict[str, Any], attempts: int, error: str):
+        """Retry job with updated attempts"""
         try:
-            async with self.db_pool.acquire() as conn:
-                query = "SELECT * FROM pgmq.set_vt('job_queue', $1, 0);"
-                await conn.execute(query, job_id)
-                logger.debug(f"🔄 Rejected job {job_id} for retry")
-                return True
+            job_id = job.get("id")
+            order_id = job.get("order_id")
+            
+            logger.info(f"Retrying job {job_id}, attempt {attempts}: {error}")
+            
+            # Update job attempts
+            await resilient_database_call(
+                self.supabase.update_job_attempts,
+                job_id,
+                attempts,
+                error
+            )
+            
+            # Update order status
+            await resilient_database_call(
+                self.supabase.update_order_status,
+                order_id,
+                "retrying",
+                f"Attempt {attempts}: {error}"
+            )
+            
         except Exception as e:
-            logger.error(f"❌ Error rejecting job {job_id}: {str(e)}")
-            return False
+            logger.error(f"Failed to retry job: {e}")
     
-    async def move_to_dlq(self, job_id: int, reason: str) -> bool:
-        """Move job to dead letter queue"""
-        if not self.db_pool:
-            return False
+    async def process_batch(self, batch_size: int) -> List[Dict[str, Any]]:
+        """Process a batch of jobs"""
+        # Fetch jobs
+        jobs = await self.fetch_jobs(batch_size)
+        if not jobs:
+            return []
         
+        # Process batch
+        results = await self.batch_processor.process_batch(
+            jobs,
+            self.process_job
+        )
+        
+        # Acknowledge successful jobs
+        successful_jobs = [r["job"] for r in results if r.get("success")]
+        for job in successful_jobs:
+            await self._acknowledge_job(job)
+        
+        return results
+    
+    async def _acknowledge_job(self, job: Dict[str, Any]):
+        """Acknowledge job completion"""
         try:
-            async with self.db_pool.acquire() as conn:
-                # First archive to DLQ
-                query = """
-                SELECT * FROM pgmq.send(
-                    'dlq_job_queue',
-                    jsonb_build_object(
-                        'original_job_id', $1,
-                        'reason', $2,
-                        'moved_at', now()
+            job_id = job.get("id")
+            await resilient_database_call(
+                self.supabase.acknowledge_job,
+                job_id
+            )
+        except Exception as e:
+            logger.error(f"Failed to acknowledge job {job_id}: {e}")
+    
+    async def run_health_check(self):
+        """Run periodic health check"""
+        while self.is_running and not self.shutdown_requested:
+            try:
+                health_status = self.health_monitor.health_check()
+                logger.info(f"Worker health: {health_status}")
+                
+                # Log to error metrics
+                if health_status["status"] != "healthy":
+                    error_metrics.record_error(
+                        Exception(f"Worker health degraded: {health_status.get('issue', 'unknown')}"),
+                        "worker_health"
                     )
-                );
-                """
-                await conn.execute(query, job_id, reason)
                 
-                # Then delete from main queue
-                await self.acknowledge_job(job_id)
+                await asyncio.sleep(self.config.health_check_interval)
                 
-                logger.warning(f"⚠️ Moved job {job_id} to DLQ: {reason}")
-                return True
-        except Exception as e:
-            logger.error(f"❌ Error moving job {job_id} to DLQ: {str(e)}")
-            return False
+            except Exception as e:
+                logger.error(f"Health check failed: {e}")
+                await asyncio.sleep(5.0)
     
     async def run(self):
         """Main worker loop"""
-        logger.info("🚀 Starting PGMQ Worker...")
+        self.is_running = True
+        logger.info("Starting optimized worker...")
         
-        # Connect to database
-        if not await self.connect_to_database():
-            logger.error("❌ Failed to connect to database, exiting")
-            return
-        
-        # Test DeepSeek connection
-        if not await self.deepseek.test_connection():
-            logger.warning("⚠️ DeepSeek connection test failed, but continuing...")
-        
-        self.running = True
-        logger.info(f"✅ Worker started, polling every {self.poll_interval} seconds")
+        # Start health check task
+        health_task = asyncio.create_task(self.run_health_check())
+        self.current_tasks.append(health_task)
         
         try:
-            while self.running:
+            while self.is_running and not self.shutdown_requested:
                 try:
-                    # Poll for jobs
-                    job = await self.poll_job_queue()
+                    # Get queue depth and adjust polling
+                    queue_depth = await self.get_queue_depth()
+                    self.health_monitor.update_queue_depth(queue_depth)
                     
-                    if job:
-                        # Process the job
-                        await self.process_job(job)
-                    else:
-                        # No jobs available, wait before polling again
-                        await asyncio.sleep(self.poll_interval)
+                    poll_interval = self.polling_manager.update_interval(queue_depth)
+                    
+                    # Determine batch size based on queue depth
+                    batch_size = self._calculate_batch_size(queue_depth)
+                    
+                    if queue_depth > 0:
+                        logger.info(f"Queue depth: {queue_depth}, batch size: {batch_size}, poll interval: {poll_interval:.1f}s")
                         
-                except asyncio.CancelledError:
-                    logger.info("🛑 Worker cancelled")
-                    break
-                except Exception as e:
-                    logger.error(f"❌ Error in worker loop: {str(e)}", exc_info=True)
-                    await asyncio.sleep(self.poll_interval * 2)  # Backoff on error
+                        # Process batch
+                        results = await self.process_batch(batch_size)
+                        
+                        # Log results
+                        success_count = sum(1 for r in results if r.get("success"))
+                        if results:
+                            logger.info(f"Batch processed: {success_count}/{len(results)} successful")
                     
-        except KeyboardInterrupt:
-            logger.info("🛑 Worker stopped by user")
+                    else:
+                        logger.debug(f"No jobs in queue, sleeping for {poll_interval:.1f}s")
+                    
+                    # Wait for next poll or shutdown
+                    await asyncio.sleep(poll_interval)
+                    
+                    # Check for shutdown
+                    if self.shutdown_requested:
+                        break
+                        
+                except Exception as e:
+                    logger.error(f"Worker loop error: {e}")
+                    await asyncio.sleep(5.0)  # Brief pause on error
+        
         finally:
-            self.running = False
-            if self.db_pool:
-                await self.db_pool.close()
-            logger.info("🛑 Worker shutdown complete")
+            # Wait for graceful shutdown
+            await self._wait_for_shutdown()
+            
+            # Cancel health task
+            health_task.cancel()
+            try:
+                await health_task
+            except asyncio.CancelledError:
+                pass
+            
+            logger.info("Worker stopped")
     
-    async def stop(self):
-        """Stop the worker"""
-        self.running = False
-        logger.info("🛑 Stopping worker...")
+    def _calculate_batch_size(self, queue_depth: int) -> int:
+        """Calculate optimal batch size based on queue depth"""
+        if queue_depth <= self.config.min_batch_size:
+            return self.config.min_batch_size
+        elif queue_depth >= self.config.max_batch_size:
+            return self.config.max_batch_size
+        else:
+            # Scale batch size with queue depth
+            return min(queue_depth, self.config.max_batch_size)
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get worker statistics"""
+        return {
+            "is_running": self.is_running,
+            "shutdown_requested": self.shutdown_requested,
+            "current_tasks": len(self.current_tasks),
+            "polling_stats": self.polling_manager.get_stats(),
+            "health_status": self.health_monitor.health_check(),
+            "error_metrics": error_metrics.get_metrics(),
+        }
 
 
 async def main():
-    """Main entry point"""
-    worker = PGMQWorker()
+    """Main entry point for optimized worker"""
+    import os
+    
+    # Initialize clients
+    supabase_url = os.environ.get("SUPABASE_URL")
+    supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
+    
+    if not supabase_url or not supabase_key:
+        logger.error("❌ Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY")
+        return
+    
+    supabase_client = SupabaseClient(supabase_url, supabase_key)
+    deepseek_client = AdvancedDeepSeekClient()
+    
+    # Create and run worker
+    worker = OptimizedWorker(supabase_client, deepseek_client)
     
     try:
         await worker.run()
     except KeyboardInterrupt:
-        await worker.stop()
+        logger.info("Worker interrupted by user")
     except Exception as e:
-        logger.error(f"❌ Fatal worker error: {str(e)}", exc_info=True)
+        logger.error(f"Worker failed: {e}")
         raise
+    finally:
+        # Print final stats
+        stats = worker.get_stats()
+        logger.info(f"Final worker stats: {stats}")
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ import asyncio
 import sys
 import time
 from unittest.mock import AsyncMock, Mock, patch
-from src.worker_optimized import (
+from src.worker import (
     WorkerConfig, AdaptivePollingManager, BatchProcessor,
     HealthMonitor, OptimizedWorker
 )

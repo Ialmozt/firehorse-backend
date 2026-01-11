@@ -93,9 +93,7 @@
 │   │   └── deepseek_client_v2.py
 │   ├── show_dashboard_state.py
 │   ├── test_real_kwork_flow.py
-│   ├── worker.py
-│   ├── worker_optimized.py
-│   └── worker_rest.py
+│   └── worker.py
 ├── tests
 │   ├── test_monitoring.py
 │   ├── test_observability.py
@@ -145,9 +143,7 @@ ac2c298 | 2026-01-04 | feat: FastAPI backend v1.0 with Supabase integration
 
 ### Файлы
 - `src/main.py` - Основной FastAPI сервер с webhook обработкой, health check, metrics endpoint
-- `src/worker_rest.py` - Worker для обработки заданий через REST API
-- `src/worker_optimized.py` - Оптимизированный worker с улучшенной обработкой
-- `src/worker.py` - Базовый worker для обработки заданий
+- `src/worker.py` - Консолидированный оптимизированный worker с улучшенной обработкой, adaptive polling, batch processing, health monitoring
 - `src/core/resilience.py` - Retry логика с backoff стратегией
 - `src/core/logging.py` - Конфигурация логирования с JSON форматом
 - `src/core/error_handling.py` - Обработка ошибок и исключений
