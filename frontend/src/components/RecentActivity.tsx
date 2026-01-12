@@ -18,6 +18,7 @@ import {
   ArrowForwardIcon,
 } from '@chakra-ui/icons';
 import { useQuery } from '@tanstack/react-query';
+import { api } from '../services/api';
 
 interface ActivityItem {
   id: string;
@@ -35,48 +36,89 @@ export const RecentActivity: React.FC = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['recent-activity'],
     queryFn: async () => {
-      // Временные данные, пока нет реального API
-      return {
-        data: [
-          {
-            id: '1',
-            type: 'order' as const,
-            message: 'Новый заказ создан',
-            user: 'Иван Петров',
-            timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 минут назад
-            status: 'success' as const,
-          },
-          {
-            id: '2',
-            type: 'system' as const,
-            message: 'Автоматическая обработка завершена',
-            timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 минут назад
-            status: 'info' as const,
-          },
-          {
-            id: '3',
-            type: 'error' as const,
-            message: 'Ошибка подключения к DeepSeek API',
-            timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 минут назад
-            status: 'error' as const,
-          },
-          {
-            id: '4',
-            type: 'order' as const,
-            message: 'Заказ #12345 отправлен на доработку',
-            user: 'Анна Сидорова',
-            timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 минут назад
-            status: 'warning' as const,
-          },
-          {
-            id: '5',
-            type: 'system' as const,
-            message: 'Ежедневный бэкап выполнен',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 час назад
-            status: 'success' as const,
-          },
-        ],
-      };
+      try {
+        // Получаем последние заказы из API
+        const response = await api.orders.getAll(1, 10);
+        const orders = response.data.data?.items || [];
+        
+        // Преобразуем заказы в события активности
+        const activities: ActivityItem[] = orders.map((order: any) => {
+          let message = '';
+          let status: 'success' | 'warning' | 'error' | 'info' = 'info';
+          let type: 'order' | 'system' | 'error' | 'info' = 'order';
+          
+          switch (order.status) {
+            case 'queued':
+              message = `Новый заказ создан: ${order.topic}`;
+              status = 'info';
+              break;
+            case 'processing':
+              message = `Заказ в обработке: ${order.topic}`;
+              status = 'warning';
+              break;
+            case 'completed':
+              message = `Заказ завершен: ${order.topic}`;
+              status = 'success';
+              break;
+            case 'failed':
+              message = `Ошибка в заказе: ${order.topic}`;
+              status = 'error';
+              type = 'error';
+              break;
+            default:
+              message = `Заказ обновлен: ${order.topic}`;
+              status = 'info';
+          }
+          
+          return {
+            id: order.id,
+            type,
+            message,
+            user: order.customer_name || 'Клиент',
+            timestamp: order.created_at || new Date().toISOString(),
+            status,
+          };
+        });
+        
+        // Если заказов нет, возвращаем демо-данные
+        if (activities.length === 0) {
+          return {
+            data: [
+              {
+                id: '1',
+                type: 'order' as const,
+                message: 'Добро пожаловать в Firehorse!',
+                user: 'Система',
+                timestamp: new Date().toISOString(),
+                status: 'info' as const,
+              },
+              {
+                id: '2',
+                type: 'system' as const,
+                message: 'Система готова к работе',
+                timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+                status: 'success' as const,
+              },
+            ],
+          };
+        }
+        
+        return { data: activities };
+      } catch (error) {
+        console.error('Error fetching recent activity:', error);
+        // Возвращаем демо-данные в случае ошибки
+        return {
+          data: [
+            {
+              id: '1',
+              type: 'system' as const,
+              message: 'Подключение к API...',
+              timestamp: new Date().toISOString(),
+              status: 'info' as const,
+            },
+          ],
+        };
+      }
     },
     refetchInterval: 60000, // Обновлять каждую минуту
   });
