@@ -81,7 +81,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     
     def __init__(self, app, rate_limiter: RateLimiter = None):
         super().__init__(app)
-        self.rate_limiter = rate_limiter or RateLimiter(requests_per_minute=10)
+        self.rate_limiter = rate_limiter or RateLimiter(requests_per_minute=60)
     
     async def dispatch(self, request: Request, call_next) -> Response:
         request_id = get_request_id()

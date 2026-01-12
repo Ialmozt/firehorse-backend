@@ -31,7 +31,7 @@ app = FastAPI(
 )
 
 # Initialize rate limiter (10 requests per minute per IP как указано в задаче)
-rate_limiter = RateLimiter(requests_per_minute=10)
+rate_limiter = RateLimiter(requests_per_minute=60)
 
 # Add security middleware (должен быть первым после CORS для rate limiting и security headers)
 app.add_middleware(SecurityMiddleware, rate_limiter=rate_limiter)
@@ -444,27 +444,23 @@ async def get_dashboard_stats():
         return error_response("STATS_ERROR", str(e), 500)
 
 @app.get("/api/stats")
+@app.get("/api/stats")
 async def get_stats():
     """Get order statistics (compatible with frontend)"""
     try:
         # Return stats in frontend expected format
         return success_response({
             "total": 0,
+            "queued": 0,
             "processing": 0,
             "completed": 0,
-            "revenue": 0.0,
-            "average_time": 0,
-            "success_rate": 100
+            "failed": 0,
+            "today": 0,
+            "revenue": 0
         })
     except Exception as e:
         logger.error(f"Failed to get stats: {e}")
         return error_response("STATS_ERROR", str(e), 500)
-
-@app.get("/api/stats/recent")
-async def get_recent_stats(hours: int = 24):
-    """Get recent statistics"""
-    try:
-        # For now, return empty recent stats
         return success_response({
             "period": f"last_{hours}_hours",
             "data": []
