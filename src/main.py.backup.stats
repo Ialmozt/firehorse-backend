@@ -443,35 +443,6 @@ async def get_dashboard_stats():
         logger.error(f"Failed to get dashboard stats: {e}")
         return error_response("STATS_ERROR", str(e), 500)
 
-@app.get("/api/stats")
-async def get_stats():
-    """Get order statistics (compatible with frontend)"""
-    try:
-        # Return stats in frontend expected format
-        return success_response({
-            "total": 0,
-            "processing": 0,
-            "completed": 0,
-            "revenue": 0.0,
-            "average_time": 0,
-            "success_rate": 100
-        })
-    except Exception as e:
-        logger.error(f"Failed to get stats: {e}")
-        return error_response("STATS_ERROR", str(e), 500)
-
-@app.get("/api/stats/recent")
-async def get_recent_stats(hours: int = 24):
-    """Get recent statistics"""
-    try:
-        # For now, return empty recent stats
-        return success_response({
-            "period": f"last_{hours}_hours",
-            "data": []
-        })
-    except Exception as e:
-        logger.error(f"Failed to get recent stats: {e}")
-        return error_response("STATS_ERROR", str(e), 500)
 @app.get("/api/metrics")
 async def api_get_metrics():
     """Prometheus metrics endpoint"""
