@@ -1,26 +1,22 @@
 import React from 'react';
 import {
   Box,
-  Grid,
-  GridItem,
-  Heading,
-  Text,
+  SimpleGrid,
+  Card,
+  CardBody,
   Stat,
   StatLabel,
   StatNumber,
   StatHelpText,
   StatArrow,
-  Flex,
+  Text,
   useColorModeValue,
-  Card,
-  CardBody,
-  SimpleGrid,
 } from '@chakra-ui/react';
-import { useOrderStats } from '../hooks/useOrders';
-import { SystemHealthCard } from './SystemHealthCard';
+import { RevenueChart } from './RevenueChart';
 import { OrdersTable } from './OrdersTable';
 import { RecentActivity } from './RecentActivity';
-import { RevenueChart } from './RevenueChart';
+import { SystemHealthCard } from './SystemHealthCard';
+import { useOrderStats } from '../hooks/useOrders';
 
 export const Dashboard: React.FC = () => {
   const { data: statsData, isLoading, error } = useOrderStats();
@@ -61,7 +57,7 @@ export const Dashboard: React.FC = () => {
     },
     {
       label: 'Выручка',
-      value: `$${stats.revenue.toLocaleString()}`,
+      value: `$${(stats.revenue || 0).toLocaleString()}`,
       change: '+15%',
       isPositive: true,
       color: 'purple',
@@ -79,25 +75,13 @@ export const Dashboard: React.FC = () => {
   if (error) {
     return (
       <Box p={6}>
-        <Text color="red.500">Ошибка загрузки статистики: {error.message}</Text>
+        <Text color="red.500">Ошибка загрузки статистики</Text>
       </Box>
     );
   }
 
   return (
     <Box p={6}>
-      <Flex justifyContent="space-between" alignItems="center" mb={8}>
-        <Box>
-          <Heading size="lg" mb={2}>
-            Панель управления Firehorse
-          </Heading>
-          <Text color="gray.600">
-            Мониторинг и управление автоматической обработкой заказов
-          </Text>
-        </Box>
-        <SystemHealthCard />
-      </Flex>
-
       {/* Статистика */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
         {statCards.map((stat, index) => (
@@ -120,38 +104,28 @@ export const Dashboard: React.FC = () => {
         ))}
       </SimpleGrid>
 
-      <Grid templateColumns={{ base: '1fr', lg: '2fr 1fr' }} gap={6} mb={8}>
-        {/* График выручки */}
-        <GridItem>
-          <Card bg={bgColor} border="1px" borderColor={borderColor} height="100%">
-            <CardBody>
-              <Heading size="md" mb={4}>
-                Выручка по дням
-              </Heading>
-              <RevenueChart />
-            </CardBody>
-          </Card>
-        </GridItem>
+      {/* График выручки */}
+      <Card bg={bgColor} border="1px" borderColor={borderColor} mb={8}>
+        <CardBody>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>
+            Динамика выручки
+          </Text>
+          <RevenueChart />
+        </CardBody>
+      </Card>
 
-        {/* Последняя активность */}
-        <GridItem>
-          <Card bg={bgColor} border="1px" borderColor={borderColor} height="100%">
-            <CardBody>
-              <Heading size="md" mb={4}>
-                Последняя активность
-              </Heading>
-              <RecentActivity />
-            </CardBody>
-          </Card>
-        </GridItem>
-      </Grid>
+      {/* Последняя активность и системное здоровье */}
+      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={8}>
+        <RecentActivity />
+        <SystemHealthCard />
+      </SimpleGrid>
 
       {/* Таблица заказов */}
       <Card bg={bgColor} border="1px" borderColor={borderColor}>
         <CardBody>
-          <Heading size="md" mb={4}>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>
             Последние заказы
-          </Heading>
+          </Text>
           <OrdersTable />
         </CardBody>
       </Card>

@@ -5,42 +5,29 @@ from datetime import datetime
 
 class Order(BaseModel):
     """Kwork order model with validation"""
-    
-    id: str = Field(..., min_length=1, max_length=50, description="Kwork order ID")
-    title: str = Field(..., min_length=1, max_length=500, description="Order title")
-    price: float = Field(..., gt=0, le=1000000, description="Order price")
-    description: Optional[str] = Field(None, max_length=5000, description="Order description")
-    buyer_id: Optional[str] = Field(None, max_length=50, description="Kwork buyer ID")
-    
-    @validator('title')
-    def title_no_injection(cls, v):
-        """Prevent injection attacks in title"""
+
+    kworkid: str = Field(..., min_length=1, max_length=50, description="Kwork order ID")
+    topic: str = Field(..., min_length=1, max_length=500, description="Order topic")
+
+    @validator('topic')
+    def topic_no_injection(cls, v):
+        """Prevent injection attacks in topic"""
         if '<' in v or '>' in v or ';' in v:
-            raise ValueError('Title contains invalid characters')
+            raise ValueError('Topic contains invalid characters')
         return v
-    
-    @validator('price')
-    def price_realistic(cls, v):
-        """Ensure price is realistic"""
-        if v < 0.01:
-            raise ValueError('Price must be at least 0.01')
-        return v
-    
+
     class Config:
         schema_extra = {
             "example": {
-                "id": "kwork_12345",
-                "title": "Logo Design",
-                "price": 150,
-                "description": "Need professional logo",
-                "buyer_id": "kwork_buyer_999"
+                "kworkid": "123456",
+                "topic": "SEO Article about AI"
             }
         }
 
 class OrderResponse(BaseModel):
     """Response model for order creation"""
     status: str
-    order_id: str
+    orderid: str
     request_id: str
     message: Optional[str] = None
 

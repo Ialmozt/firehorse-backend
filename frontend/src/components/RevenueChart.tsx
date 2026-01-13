@@ -128,7 +128,10 @@ export const RevenueChart: React.FC = () => {
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload && payload.length >= 2) {
+      const revenueValue = payload[0]?.value || 0;
+      const ordersValue = payload[1]?.value || 0;
+      
       return (
         <Box
           bg={useColorModeValue('white', 'gray.800')}
@@ -142,10 +145,10 @@ export const RevenueChart: React.FC = () => {
             {label}
           </Text>
           <Text color={lineColor}>
-            Выручка: {formatCurrency(payload[0].value)}
+            Выручка: {formatCurrency(revenueValue)}
           </Text>
           <Text color="#10b981">
-            Заказы: {payload[1].value}
+            Заказы: {ordersValue}
           </Text>
         </Box>
       );
