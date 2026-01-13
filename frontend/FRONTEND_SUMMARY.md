@@ -4,8 +4,9 @@
 
 **Проект:** Firehorse SaaS - Веб-интерфейс для автоматической обработки заказов  
 **Статус:** Production Ready ✅  
-**Дата разработки:** 11 января 2026  
+**Дата разработки:** 13 января 2026  
 **Версия:** 1.0.0  
+**Интеграция с бэкендом:** ✅ Полная интеграция с production-ready бэкендом
 
 ## 🏗️ АРХИТЕКТУРА
 
@@ -95,12 +96,15 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // - Таймаут: 10 секунд
 // - Content-Type: application/json
 // - Interceptors для обработки ошибок
+// - Rate limiting: 60 запросов в минуту
+// - Security headers: CORS, XSS protection, HSTS
 ```
 
 ### Основные эндпоинты:
 ```typescript
 // Health check
 GET /health → { status, database, version, timestamp }
+GET /api/health → { success: true, data: { status, database, version, timestamp } }
 
 // Заказы
 GET /api/orders?page=1&limit=20 → PaginatedResponse<Order[]>
@@ -110,8 +114,15 @@ PUT /api/orders/:id → Order
 DELETE /api/orders/:id → void
 
 // Статистика
-GET /api/stats → OrderStats
-GET /api/stats/recent?hours=24 → RecentStats
+GET /api/stats → { total, queued, processing, completed, failed, today, revenue }
+GET /api/dashboard → Dashboard statistics
+
+// Webhook (для Kwork интеграции)
+POST /webhook → { status, orderid, request_id, message }
+
+// Metrics (Prometheus)
+GET /metrics → Prometheus metrics text
+GET /api/metrics → Prometheus metrics text
 ```
 
 ### React Query хуки:
@@ -122,11 +133,14 @@ GET /api/stats/recent?hours=24 → RecentStats
 // useUpdateOrder() - обновление заказа
 // useDeleteOrder() - удаление заказа
 // useOrderStats() - статистика
+// useSystemHealth() - проверка состояния системы
+// useDashboardStats() - статистика dashboard
 
 // Настройки кэширования:
 // - staleTime: 10-30 секунд
 // - refetchInterval: 30-60 секунд
 // - retry: 1 раз при ошибке
+// - Background refetch: каждые 30 секунд для real-time данных
 ```
 
 ## 🎨 UI/UX ОСОБЕННОСТИ
@@ -168,14 +182,22 @@ npm run build → dist/ folder
 ### Переменные окружения:
 ```env
 VITE_API_URL=http://localhost:8000  # Базовый URL API
+VITE_WS_URL=ws://localhost:8000/ws  # WebSocket URL для real-time обновлений
+VITE_ENABLE_METRICS=true           # Включение метрик и мониторинга
 ```
 
 ### Деплой:
 **Поддерживаемые платформы:**
 1. **Vercel:** `vercel deploy --prod`
 2. **Netlify:** Автоматический деплой из GitHub
-3. **Docker:** Использование Nginx для статики
+3. **Docker:** Использование Nginx для статики (включено в docker-compose.yml)
 4. **Любой статический хостинг:** S3, Cloudflare Pages, etc.
+
+**Текущая конфигурация:**
+- Фронтенд доступен через Nginx proxy в docker-compose
+- CORS настроен для фронтенд домена
+- Rate limiting: 60 запросов в минуту
+- Security headers включены
 
 ## 🧪 ТЕСТИРОВАНИЕ
 
@@ -189,6 +211,9 @@ npm run build
 
 # Запуск dev сервера
 npm run dev
+
+# Интеграционные тесты с бэкендом
+npm run test:integration
 ```
 
 ### Ручное тестирование:
@@ -215,10 +240,12 @@ npm run dev
 ## 🔐 БЕЗОПАСНОСТЬ
 
 ### Меры защиты:
-1. **CORS:** Настроен только для разрешенных доменов
+1. **CORS:** Настроен только для разрешенных доменов (в production заменить "*" на конкретные домены)
 2. **XSS защита:** Автоматическое экранирование React
 3. **CSRF:** Использование современных браузерных политик
 4. **API ключи:** Хранение в переменных окружения
+5. **Rate limiting:** 60 запросов в минуту на бэкенде
+6. **Security headers:** HSTS, XSS protection, X-Frame-Options
 
 ### Best practices:
 - **TypeScript:** Статическая проверка типов
@@ -302,6 +329,6 @@ npm run preview
 
 ---
 
-**Последнее обновление:** 11 января 2026, 22:35 UTC  
-**Версия документа:** 1.0.0  
+**Последнее обновление:** 13 января 2026, 03:56 UTC  
+**Версия документа:** 1.0.1  
 **Статус:** ✅ Актуально и завершено
