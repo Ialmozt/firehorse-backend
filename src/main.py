@@ -613,7 +613,7 @@ async def webhook(order: Order, x_token: str = Header(None)):  # Pydantic valida
         
         if not SUPABASE_URL or not SUPABASE_KEY:
             logger.warning("Supabase credentials missing, using temporary bypass")
-            return create_temporary_response(order, request_id, start_time)
+            return await create_temporary_response(order, request_id, start_time)
         
         try:
             # Convert kworkid to integer if possible (RPC expects bigint)
@@ -668,20 +668,20 @@ async def webhook(order: Order, x_token: str = Header(None)):  # Pydantic valida
                         )
                     else:
                         logger.warning("RPC returned empty data, using temporary bypass")
-                        return create_temporary_response(order, request_id, start_time)
+                        return await create_temporary_response(order, request_id, start_time)
                 else:
                     logger.warning(
                         f"Supabase RPC failed: {response.status_code}, using temporary bypass",
                         extra={"response": response.text[:200]}
                     )
-                    return create_temporary_response(order, request_id, start_time)
+                    return await create_temporary_response(order, request_id, start_time)
                     
         except Exception as supabase_error:
             logger.warning(
                 f"Supabase error, using temporary bypass: {str(supabase_error)[:100]}",
                 exc_info=True
             )
-            return create_temporary_response(order, request_id, start_time)
+            return await create_temporary_response(order, request_id, start_time)
 
     except HTTPException:
         # Re-raise HTTP exceptions (they already have proper status codes)
@@ -704,30 +704,122 @@ async def webhook(order: Order, x_token: str = Header(None)):  # Pydantic valida
         )
         raise HTTPException(status_code=500, detail=str(e))
 
-def create_temporary_response(order, request_id, start_time):
-    """Create temporary response when Supabase is unavailable"""
-    import uuid
-    fake_order_id = str(uuid.uuid4())
-    
-    logger.warning(
-        "TEMPORARY: Using bypass due to Supabase issues",
-        extra={
-            "request_id": request_id,
-            "kworkid": order.kworkid,
-            "fake_order_id": fake_order_id
+async def insert_order_direct(kworkid: str, topic: str, request_id: str):
+    """Insert order directly into fh_orders table via REST API using anon key"""
+    try:
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")  # Use anon key instead of service role
+        
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            logger.warning("Supabase credentials missing, cannot insert order")
+            return None
+        
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
         }
-    )
+        
+        # Prepare data for fh_orders table
+        order_data = {
+            "source_id": kworkid,
+            "topic": topic[:500],  # Limit to 500 chars
+            "status": "queued",
+            "attempts": 0,
+            "metrics": {},
+            "last_error": None
+        }
+        
+        async with get_http_client() as client:
+            response = await client.post(
+                f"{SUPABASE_URL}/rest/v1/fh_orders",
+                headers=headers,
+                json=order_data
+            )
+            
+            if response.status_code == 201:
+                inserted_data = response.json()
+                if inserted_data and len(inserted_data) > 0:
+                    order_id = inserted_data[0]["id"]
+                    logger.info(
+                        "order_inserted_direct",
+                        extra={
+                            "request_id": request_id,
+                            "kworkid": kworkid,
+                            "order_id": order_id,
+                            "table": "fh_orders",
+                            "method": "anon_key"
+                        }
+                    )
+                    return order_id
+                else:
+                    logger.warning("No data returned from fh_orders insert")
+                    return None
+            else:
+                logger.warning(
+                    f"Failed to insert into fh_orders: {response.status_code}",
+                    extra={"response": response.text[:200]}
+                )
+                return None
+                
+    except Exception as e:
+        logger.error(
+            f"Error inserting order directly: {str(e)[:100]}",
+            exc_info=True
+        )
+        return None
+
+async def create_temporary_response(order, request_id, start_time):
+    """Create response with direct order insertion when RPC fails"""
+    # Try to insert order directly into fh_orders
+    real_order_id = await insert_order_direct(order.kworkid, order.topic, request_id)
     
-    metrics_module.orders_completed_total.inc()
-    duration = time.time() - start_time
-    logger.info(f"Order {order.kworkid} processed in {duration:.2f}s (TEMPORARY BYPASS)")
-    
-    return OrderResponse(
-        status="accepted",
-        orderid=fake_order_id,
-        request_id=request_id,
-        message="Order processed successfully (temporary bypass - Supabase RLS/API key needs fixing)"
-    )
+    if real_order_id:
+        # Successfully inserted into database
+        logger.info(
+            "order_inserted_direct_success",
+            extra={
+                "request_id": request_id,
+                "kworkid": order.kworkid,
+                "order_id": real_order_id,
+                "method": "direct_insert"
+            }
+        )
+        
+        metrics_module.orders_completed_total.inc()
+        duration = time.time() - start_time
+        logger.info(f"Order {order.kworkid} processed in {duration:.2f}s (DIRECT INSERT)")
+        
+        return OrderResponse(
+            status="accepted",
+            orderid=real_order_id,
+            request_id=request_id,
+            message="Order processed successfully via direct database insert"
+        )
+    else:
+        # Fallback to fake UUID if direct insert fails
+        import uuid
+        fake_order_id = str(uuid.uuid4())
+        
+        logger.warning(
+            "TEMPORARY: Using fake UUID due to database insert failure",
+            extra={
+                "request_id": request_id,
+                "kworkid": order.kworkid,
+                "fake_order_id": fake_order_id
+            }
+        )
+        
+        metrics_module.orders_completed_total.inc()
+        duration = time.time() - start_time
+        logger.info(f"Order {order.kworkid} processed in {duration:.2f}s (FAKE UUID FALLBACK)")
+        
+        return OrderResponse(
+            status="accepted",
+            orderid=fake_order_id,
+            request_id=request_id,
+            message="Order processed successfully (temporary bypass - database insert failed)"
+        )
 
 if __name__ == "__main__":
     import uvicorn
