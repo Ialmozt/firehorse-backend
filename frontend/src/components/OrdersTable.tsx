@@ -32,6 +32,7 @@ import {
   RepeatIcon,
 } from '@chakra-ui/icons';
 import { useOrders } from '../hooks/useOrders';
+import { OrderDetailsModal } from './OrderDetailsModal';
 import type { Order } from '../types';
 
 const statusColors: Record<string, string> = {
@@ -53,6 +54,8 @@ export const OrdersTable: React.FC = () => {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading, error, refetch } = useOrders(page, limit);
 
@@ -75,6 +78,16 @@ export const OrdersTable: React.FC = () => {
 
   const handleRefresh = () => {
     refetch();
+  };
+
+  const handleViewOrder = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrderId(null);
   };
 
   if (isLoading) {
@@ -213,7 +226,12 @@ export const OrdersTable: React.FC = () => {
                         variant="ghost"
                       />
                       <MenuList>
-                        <MenuItem icon={<ViewIcon />}>Просмотр</MenuItem>
+                        <MenuItem 
+                          icon={<ViewIcon />}
+                          onClick={() => handleViewOrder(order.id)}
+                        >
+                          Просмотр
+                        </MenuItem>
                         <MenuItem icon={<EditIcon />}>Редактировать</MenuItem>
                         <MenuItem icon={<DeleteIcon />} color="red.500">
                           Удалить
@@ -265,6 +283,13 @@ export const OrdersTable: React.FC = () => {
           </HStack>
         </HStack>
       )}
+
+      {/* Модальное окно с деталями заказа */}
+      <OrderDetailsModal
+        orderId={selectedOrderId}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </Box>
   );
 };

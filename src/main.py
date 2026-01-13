@@ -453,20 +453,59 @@ async def create_order(order_data: dict):
 
 @app.get("/api/orders/{order_id}")
 async def get_order(order_id: str):
-    """Get single order by ID"""
+    """Get single order by ID from fh_orders table"""
     try:
-        # TODO: Fetch from Supabase
-        return success_response({
-            "id": order_id,
-            "title": "Sample Order",
-            "status": "pending",
-            "price": 100.0,
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat()
-        })
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
+        
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            return error_response("CONFIG_ERROR", "Database configuration missing", 500)
+        
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json',
+        }
+        
+        async with get_http_client() as client:
+            # Get order by ID
+            response = await client.get(
+                f"{SUPABASE_URL}/rest/v1/fh_orders",
+                headers=headers,
+                params={'id': f'eq.{order_id}', 'select': '*'}
+            )
+            
+            if response.status_code == 200:
+                orders = response.json()
+                if orders and len(orders) > 0:
+                    order = orders[0]
+                    
+                    # Transform to frontend format
+                    transformed_order = {
+                        'id': order['id'],
+                        'source_id': order.get('source_id', ''),
+                        'topic': order.get('topic', ''),
+                        'status': order.get('status', 'queued'),
+                        'customer': 'Kwork',  # Default customer
+                        'amount': 0,  # Default amount
+                        'created_at': order.get('created_at', datetime.utcnow().isoformat()),
+                        'updated_at': order.get('updated_at', datetime.utcnow().isoformat()),
+                        'metadata': {
+                            'attempts': order.get('attempts', 0),
+                            'last_error': order.get('last_error'),
+                            'metrics': order.get('metrics', {})
+                        }
+                    }
+                    
+                    return success_response(transformed_order)
+                else:
+                    return error_response("NOT_FOUND", "Order not found", 404)
+            else:
+                logger.error(f"Failed to fetch order {order_id}: {response.status_code} - {response.text[:200]}")
+                return error_response("FETCH_ERROR", f"Failed to fetch order: {response.status_code}", 500)
+                
     except Exception as e:
         logger.error(f"Failed to get order {order_id}: {e}")
-        return error_response("NOT_FOUND", "Order not found", 404)
+        return error_response("SERVER_ERROR", str(e), 500)
 
 @app.put("/api/orders/{order_id}")
 async def update_order(order_id: str, update_data: dict):
