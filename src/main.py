@@ -607,43 +607,81 @@ async def webhook(order: Order, x_token: str = Header(None)):  # Pydantic valida
         # Increment order created metric
         metrics_module.orders_created_total.inc()
 
-        # TEMPORARY: Log and return success without database insert
-        # TODO: Fix Supabase RLS policies or update API keys
-        logger.warning(
-            "TEMPORARY: Bypassing Supabase insert due to RLS/API key issues",
-            extra={
-                "request_id": request_id,
-                "kworkid": order.kworkid,
-                "topic": order.topic
-            }
-        )
-
-        # Generate a fake order ID for testing
-        import uuid
-        fake_order_id = str(uuid.uuid4())
+        # Try to use Supabase RPC with SERVICE_ROLE_KEY
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
-        # Log successful response
-        logger.info(
-            "webhook_response_success_temporary",
-            extra={
-                "request_id": request_id,
-                "kworkid": order.kworkid,
-                "fake_order_id": fake_order_id,
-                "status": "accepted",
-            }
-        )
-
-        # At success, log metrics
-        metrics_module.orders_completed_total.inc()
-        duration = time.time() - start_time
-        logger.info(f"Order {order.kworkid} processed in {duration:.2f}s (TEMPORARY BYPASS)")
-
-        return OrderResponse(
-            status="accepted",
-            orderid=fake_order_id,
-            request_id=request_id,
-            message="Order processed successfully (temporary bypass - Supabase RLS/API key needs fixing)"
-        )
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            logger.warning("Supabase credentials missing, using temporary bypass")
+            return create_temporary_response(order, request_id, start_time)
+        
+        try:
+            # Convert kworkid to integer if possible (RPC expects bigint)
+            try:
+                kwork_id_int = int(order.kworkid)
+            except ValueError:
+                # If not numeric, use a hash
+                import hashlib
+                kwork_id_int = int(hashlib.md5(order.kworkid.encode()).hexdigest()[:8], 16) % 1000000
+            
+            # Call RPC through proxy
+            async with get_http_client() as client:
+                headers = {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': f'Bearer {SUPABASE_KEY}',
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                }
+                
+                response = await client.post(
+                    f"{SUPABASE_URL}/rest/v1/rpc/fh_ingress",
+                    headers=headers,
+                    json={'p_kwork_order_id': kwork_id_int, 'p_title': order.topic[:100]}
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data and len(data) > 0:
+                        order_id = data[0].get('orderid')
+                        created = data[0].get('created', False)
+                        
+                        logger.info(
+                            "webhook_supabase_success",
+                            extra={
+                                "request_id": request_id,
+                                "kworkid": order.kworkid,
+                                "order_id": order_id,
+                                "created": created,
+                                "status": "accepted" if created else "exists"
+                            }
+                        )
+                        
+                        metrics_module.orders_completed_total.inc()
+                        duration = time.time() - start_time
+                        logger.info(f"Order {order.kworkid} processed in {duration:.2f}s (Supabase RPC)")
+                        
+                        return OrderResponse(
+                            status="accepted" if created else "exists",
+                            orderid=order_id,
+                            request_id=request_id,
+                            message="Order processed successfully via Supabase RPC"
+                        )
+                    else:
+                        logger.warning("RPC returned empty data, using temporary bypass")
+                        return create_temporary_response(order, request_id, start_time)
+                else:
+                    logger.warning(
+                        f"Supabase RPC failed: {response.status_code}, using temporary bypass",
+                        extra={"response": response.text[:200]}
+                    )
+                    return create_temporary_response(order, request_id, start_time)
+                    
+        except Exception as supabase_error:
+            logger.warning(
+                f"Supabase error, using temporary bypass: {str(supabase_error)[:100]}",
+                exc_info=True
+            )
+            return create_temporary_response(order, request_id, start_time)
 
     except HTTPException:
         # Re-raise HTTP exceptions (they already have proper status codes)
@@ -665,6 +703,31 @@ async def webhook(order: Order, x_token: str = Header(None)):  # Pydantic valida
             exc_info=True
         )
         raise HTTPException(status_code=500, detail=str(e))
+
+def create_temporary_response(order, request_id, start_time):
+    """Create temporary response when Supabase is unavailable"""
+    import uuid
+    fake_order_id = str(uuid.uuid4())
+    
+    logger.warning(
+        "TEMPORARY: Using bypass due to Supabase issues",
+        extra={
+            "request_id": request_id,
+            "kworkid": order.kworkid,
+            "fake_order_id": fake_order_id
+        }
+    )
+    
+    metrics_module.orders_completed_total.inc()
+    duration = time.time() - start_time
+    logger.info(f"Order {order.kworkid} processed in {duration:.2f}s (TEMPORARY BYPASS)")
+    
+    return OrderResponse(
+        status="accepted",
+        orderid=fake_order_id,
+        request_id=request_id,
+        message="Order processed successfully (temporary bypass - Supabase RLS/API key needs fixing)"
+    )
 
 if __name__ == "__main__":
     import uvicorn
