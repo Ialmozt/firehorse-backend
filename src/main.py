@@ -341,14 +341,97 @@ async def api_health_check():
 
 @app.get("/api/orders")
 async def list_orders(page: int = 1, limit: int = 20, status: str = None):
-    """List orders with pagination"""
+    """List orders with pagination from fh_orders table"""
     try:
-        # TODO: Fetch from Supabase with pagination
-        orders = []
-        return success_response({
-            "orders": orders,
-            "pagination": {"page": page, "limit": limit, "total": 0},
-        })
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
+        
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            return success_response({
+                "items": [],
+                "pagination": {"page": page, "limit": limit, "total": 0, "total_pages": 0},
+            })
+        
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json',
+        }
+        
+        # Calculate offset for pagination
+        offset = (page - 1) * limit
+        
+        # Build query parameters
+        params = {
+            'select': 'id,source_id,topic,status,created_at,updated_at',
+            'order': 'created_at.desc',
+            'limit': limit,
+            'offset': offset,
+        }
+        
+        # Add status filter if provided
+        if status and status != 'all':
+            params['status'] = f'eq.{status}'
+        
+        # Get total count
+        count_params = {'select': 'count'}
+        if status and status != 'all':
+            count_params['status'] = f'eq.{status}'
+        
+        async with get_http_client() as client:
+            # Get total count
+            count_response = await client.get(
+                f"{SUPABASE_URL}/rest/v1/fh_orders",
+                headers=headers,
+                params=count_params
+            )
+            
+            total_count = 0
+            if count_response.status_code == 200:
+                count_data = count_response.json()
+                total_count = count_data[0]['count'] if count_data else 0
+            
+            # Get orders
+            response = await client.get(
+                f"{SUPABASE_URL}/rest/v1/fh_orders",
+                headers=headers,
+                params=params
+            )
+            
+            if response.status_code == 200:
+                orders = response.json()
+                
+                # Transform to frontend format
+                transformed_orders = []
+                for order in orders:
+                    transformed_orders.append({
+                        'id': order['id'],
+                        'source_id': order['source_id'],
+                        'topic': order['topic'],
+                        'status': order['status'],
+                        'customer': 'Kwork',  # Default customer
+                        'amount': 0,  # Default amount
+                        'created_at': order['created_at'],
+                        'updated_at': order['updated_at'],
+                    })
+                
+                total_pages = (total_count + limit - 1) // limit if limit > 0 else 0
+                
+                return success_response({
+                    "items": transformed_orders,
+                    "pagination": {
+                        "page": page,
+                        "limit": limit,
+                        "total": total_count,
+                        "total_pages": total_pages,
+                    },
+                })
+            else:
+                logger.error(f"Failed to fetch orders: {response.status_code} - {response.text[:200]}")
+                return success_response({
+                    "items": [],
+                    "pagination": {"page": page, "limit": limit, "total": 0, "total_pages": 0},
+                })
+                
     except Exception as e:
         logger.error(f"Failed to list orders: {e}")
         return error_response("FETCH_ERROR", str(e), 500)
@@ -448,25 +531,81 @@ async def get_dashboard_stats():
 async def get_stats():
     """Get order statistics (compatible with frontend)"""
     try:
-        # Return stats in frontend expected format
-        return success_response({
-            "total": 0,
-            "queued": 0,
-            "processing": 0,
-            "completed": 0,
-            "failed": 0,
-            "today": 0,
-            "revenue": 0
-        })
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
+        
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            return success_response({
+                "total": 0,
+                "queued": 0,
+                "processing": 0,
+                "completed": 0,
+                "failed": 0,
+                "today": 0,
+                "revenue": 0
+            })
+        
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Content-Type': 'application/json',
+        }
+        
+        async with get_http_client() as client:
+            # Get total count
+            total_response = await client.get(
+                f"{SUPABASE_URL}/rest/v1/fh_orders",
+                headers=headers,
+                params={'select': 'count'}
+            )
+            
+            total_count = 0
+            if total_response.status_code == 200:
+                total_data = total_response.json()
+                total_count = total_data[0]['count'] if total_data else 0
+            
+            # Get counts by status
+            status_counts = {
+                'queued': 0,
+                'processing': 0,
+                'completed': 0,
+                'failed': 0
+            }
+            
+            for status in status_counts.keys():
+                status_response = await client.get(
+                    f"{SUPABASE_URL}/rest/v1/fh_orders",
+                    headers=headers,
+                    params={'status': f'eq.{status}', 'select': 'count'}
+                )
+                
+                if status_response.status_code == 200:
+                    status_data = status_response.json()
+                    status_counts[status] = status_data[0]['count'] if status_data else 0
+            
+            # Get today's count (orders created today)
+            today = datetime.utcnow().date().isoformat()
+            today_response = await client.get(
+                f"{SUPABASE_URL}/rest/v1/fh_orders",
+                headers=headers,
+                params={'created_at': f'gte.{today}', 'select': 'count'}
+            )
+            
+            today_count = 0
+            if today_response.status_code == 200:
+                today_data = today_response.json()
+                today_count = today_data[0]['count'] if today_data else 0
+            
+            return success_response({
+                "total": total_count,
+                "queued": status_counts['queued'],
+                "processing": status_counts['processing'],
+                "completed": status_counts['completed'],
+                "failed": status_counts['failed'],
+                "today": today_count,
+                "revenue": 0  # TODO: Calculate revenue when available
+            })
     except Exception as e:
         logger.error(f"Failed to get stats: {e}")
-        return error_response("STATS_ERROR", str(e), 500)
-        return success_response({
-            "period": f"last_{hours}_hours",
-            "data": []
-        })
-    except Exception as e:
-        logger.error(f"Failed to get recent stats: {e}")
         return error_response("STATS_ERROR", str(e), 500)
 @app.get("/api/metrics")
 async def api_get_metrics():
