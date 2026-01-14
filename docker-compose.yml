@@ -92,6 +92,24 @@ services:
     depends_on:
       - prometheus
 
+  telegram-bot:
+    build:
+      context: ./telegram-bot
+      dockerfile: Dockerfile
+    container_name: firehorse-telegram-bot
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - FIREHORSE_WEBHOOK_URL=http://localhost:8000/webhook
+      - INGRESS_SECRET=${INGRESS_SECRET}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./telegram-bot:/app
+      - /var/log/firehorse-telegram.log:/var/log/firehorse-telegram.log
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - api
+
 volumes:
   prometheus-data:
     driver: local
