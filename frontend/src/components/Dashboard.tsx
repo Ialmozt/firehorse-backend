@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   SimpleGrid,
@@ -11,15 +11,23 @@ import {
   StatArrow,
   Text,
   useColorModeValue,
+  Button,
+  HStack,
 } from '@chakra-ui/react';
 import { RevenueChart } from './RevenueChart';
 import { OrdersTable } from './OrdersTable';
 import { RecentActivity } from './RecentActivity';
 import { SystemHealthCard } from './SystemHealthCard';
+import { MetricsPanel } from './MetricsPanel';
+import { DeepSeekUsage } from './DeepSeekUsage';
+import { TestOrderButton } from './TestOrderButton';
+import { ManualOrderDialog } from './ManualOrderDialog';
 import { useOrderStats } from '../hooks/useOrders';
+import { AddIcon } from '@chakra-ui/icons';
 
 export const Dashboard: React.FC = () => {
   const { data: statsData, isLoading, error } = useOrderStats();
+  const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
@@ -82,6 +90,31 @@ export const Dashboard: React.FC = () => {
 
   return (
     <Box p={6}>
+      {/* Кнопки создания заказов */}
+      <Box display="flex" justifyContent="flex-end" mb={4} gap={3}>
+        <TestOrderButton />
+        <Button
+          leftIcon={<AddIcon />}
+          colorScheme="blue"
+          onClick={() => setIsManualOrderOpen(true)}
+          size="sm"
+        >
+          Новый заказ
+        </Button>
+      </Box>
+
+      {/* Диалог ручного создания заказа */}
+      <ManualOrderDialog 
+        open={isManualOrderOpen} 
+        onClose={() => setIsManualOrderOpen(false)} 
+      />
+
+      {/* Панель метрик системы */}
+      <MetricsPanel />
+
+      {/* Использование DeepSeek API */}
+      <DeepSeekUsage />
+
       {/* Статистика */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
         {statCards.map((stat, index) => (
@@ -123,9 +156,20 @@ export const Dashboard: React.FC = () => {
       {/* Таблица заказов */}
       <Card bg={bgColor} border="1px" borderColor={borderColor}>
         <CardBody>
-          <Text fontSize="xl" fontWeight="bold" mb={4}>
-            Последние заказы
-          </Text>
+          <HStack justifyContent="space-between" mb={4}>
+            <Text fontSize="xl" fontWeight="bold">
+              Последние заказы
+            </Text>
+            <Button
+              size="sm"
+              variant="outline"
+              colorScheme="blue"
+              onClick={() => setIsManualOrderOpen(true)}
+            >
+              <AddIcon mr={2} />
+              Добавить заказ
+            </Button>
+          </HStack>
           <OrdersTable />
         </CardBody>
       </Card>
